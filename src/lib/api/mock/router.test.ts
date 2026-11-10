@@ -112,15 +112,35 @@ describe("mock library and history", () => {
 });
 
 describe("mock notes, settings and export", () => {
-  it("adds notes in time order and validates them", async () => {
+  it("keeps one note per sermon: read, replace (keeping its moment), delete", async () => {
     await signInDemo();
-    await call("POST", "/notes", { body: { sermonId: "arise-and-shine", atSeconds: 60, text: "  Early thought  " } });
-    const notes = (await call("GET", "/notes", { params: { sermonId: "arise-and-shine" } })).data as { atSeconds: number; text: string }[];
-    expect(notes.map((note) => [note.atSeconds, note.text])).toEqual([
-      [60, "Early thought"],
-      [380, "I want to make more room for Scripture and prayer in my mornings."],
+    const note = async () => (await call("GET", "/notes/arise-and-shine")).data as { atSeconds: number; text: string; id: string };
+
+    const seeded = await note();
+    expect(seeded).toMatchObject({ atSeconds: 380, text: "I want to make more room for Scripture and prayer in my mornings." });
+
+    const replaced = await call("PUT", "/notes/arise-and-shine", { body: { atSeconds: 380, text: "  Edited thought  " } });
+    expect(replaced.status).toBe(200);
+    expect(await note()).toMatchObject({ id: seeded.id, atSeconds: 380, text: "Edited thought" });
+
+    expect((await call("PUT", "/notes/living-by-faith", { body: { atSeconds: 60, text: "New" } })).status).toBe(201);
+    expect((await call("PUT", "/notes/living-by-faith", { body: { atSeconds: 5, text: "   " } })).status).toBe(400);
+
+    await call("DELETE", "/notes/arise-and-shine");
+    expect((await call("GET", "/notes/arise-and-shine")).status).toBe(404);
+  });
+
+  it("collapses notes stored before the one-per-sermon rule to the latest", async () => {
+    await signInDemo();
+    const db = records(store);
+    const base = { sermonId: "living-by-faith", atSeconds: 0, text: "" };
+    await db.notes.save("user_demo_ada", [
+      { ...base, id: "old", text: "first", createdAt: "2026-11-01T00:00:00Z" },
+      { ...base, id: "new", text: "second", createdAt: "2026-11-05T00:00:00Z" },
     ]);
-    expect((await call("POST", "/notes", { body: { sermonId: "arise-and-shine", atSeconds: 5, text: "   " } })).status).toBe(400);
+    expect((await call("GET", "/notes/living-by-faith")).data).toMatchObject({ id: "new", text: "second" });
+    await call("PUT", "/notes/living-by-faith", { body: { atSeconds: 0, text: "third" } });
+    expect((await db.notes.list("user_demo_ada")).filter((n) => n.sermonId === "living-by-faith")).toHaveLength(1);
   });
 
   it("updates analytics consent", async () => {
