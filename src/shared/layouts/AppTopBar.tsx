@@ -19,7 +19,8 @@ export default function AppTopBar({ actions }: AppTopBarProps) {
       <Container className="flex h-16 items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-1">
           <MenuButton />
-          <Logo href={ROUTES.home} />
+          {/* The logo leads out to the landing page (Logo's default); Home is the first tab. */}
+          <Logo />
         </div>
         <div className="flex items-center gap-2">
           <Link

@@ -5,13 +5,13 @@ import { ChevronRight } from "lucide-react";
 const rowClasses =
   "flex w-full items-center justify-between gap-4 border-b border-border py-4 text-left text-foreground transition hover:text-brand-300 disabled:opacity-60";
 
-type SettingsRowProps = { label: string; trailing?: ReactNode } & (
+type ListRowProps = { label: string; trailing?: ReactNode } & (
   | { href: string; onClick?: never; disabled?: never }
   | { onClick: () => void; href?: never; disabled?: boolean }
 );
 
-// One line in a settings list: a link to another page, or a button that does something here.
-export default function SettingsRow({ label, trailing, href, onClick, disabled }: SettingsRowProps) {
+// One line in a list of options (Settings, About): a link to another page, or a button that does something here.
+export default function ListRow({ label, trailing, href, onClick, disabled }: ListRowProps) {
   const content = (
     <>
       <span>{label}</span>

@@ -15,7 +15,7 @@ interface TopicChipsProps {
 
 export default function TopicChips({ activeTopic, hrefFor, scroll, className }: TopicChipsProps) {
   return (
-    <ChipRow label="Topics" className={className}>
+    <ChipRow label="Categories" className={className}>
       <li>
         <Chip href={hrefFor(undefined)} active={!activeTopic} scroll={scroll}>
           All

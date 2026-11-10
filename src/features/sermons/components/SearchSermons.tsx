@@ -12,13 +12,14 @@ import { parseSearchQuery, SEARCH_SCOPES, toSearchQueryParams, type SearchQuery 
 import { TOPIC_ORDER, TOPICS } from "../lib/topics";
 import type { MatchField } from "../types";
 import SermonListItem from "./SermonListItem";
+import SermonListSkeleton from "./SermonListSkeleton";
 import SermonSearchInput from "./SermonSearchInput";
 
 const MATCH_LABELS: Record<MatchField, string> = {
   title: "Matched in title",
   speaker: "Matched in speaker",
   scripture: "Matched in scripture",
-  topic: "Matched in topic",
+  topic: "Matched in category",
 };
 
 // The Search tab. Like Browse, the URL (?q=&in=) is the only state: the box and chips write it, results read it.
@@ -82,8 +83,10 @@ export default function SearchSermons() {
       {query.q ? (
         <section aria-labelledby="search-results-title" className="mt-8">
           <h2 id="search-results-title" aria-live="polite" className="text-xl font-semibold text-foreground">
-            {data ? `${data.total} ${data.total === 1 ? "result" : "results"} for ‘${query.q}’` : " "}
+            {data ? `${data.total} ${data.total === 1 ? "result" : "results"} for ‘${query.q}’` : "Searching…"}
           </h2>
+
+          {!data && <SermonListSkeleton className="mt-5 lg:grid-cols-2" label="Searching sermons" />}
 
           {data && data.total > 0 && (
             <ul className="mt-5 grid grid-cols-1 gap-x-5 gap-y-4 lg:grid-cols-2">
@@ -112,9 +115,9 @@ export default function SearchSermons() {
         // Before anything is typed: a nudge, and topics as a way in.
         <section aria-labelledby="search-suggestions-title" className="mt-10">
           <h2 id="search-suggestions-title" className="text-sm font-medium text-muted">
-            Or start with a topic
+            Or start with a category
           </h2>
-          <ChipRow label="Topics" className="mt-4">
+          <ChipRow label="Categories" className="mt-4">
             {TOPIC_ORDER.map((topic) => (
               <li key={topic}>
                 <Chip href={ROUTES.sermonsByTopic(topic)}>{TOPICS[topic].label}</Chip>

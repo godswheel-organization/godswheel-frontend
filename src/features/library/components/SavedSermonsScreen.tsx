@@ -4,11 +4,12 @@ import { useMemo, useState } from "react";
 import SignInGate from "@/features/auth/components/account-prompt/SignInGate";
 import { useSession } from "@/features/auth/hooks/useSession";
 import SermonListItem from "@/features/sermons/components/SermonListItem";
+import SermonListSkeleton from "@/features/sermons/components/SermonListSkeleton";
 import { ROUTES } from "@/lib/routes";
 import PageHeader from "@/shared/layouts/PageHeader";
 import Container from "@/shared/ui/container/Container";
 import InlineSelect from "@/shared/ui/form/InlineSelect";
-import Loader from "@/shared/ui/loaders/Loader";
+import { Skeleton } from "@/shared/ui/skeleton/Skeleton";
 import { useGetSavedSermonsQuery } from "../api/libraryApi";
 
 type SavedSort = "newest" | "oldest" | "title";
@@ -38,13 +39,13 @@ export default function SavedSermonsScreen() {
       <PageHeader title="Saved sermons" backHref={ROUTES.library} />
 
       {sessionLoading ? (
-        <Loader className="py-16" label="Loading saved sermons" />
+        <SavedSkeleton />
       ) : !isSignedIn ? (
         <div className="mt-8">
           <SignInGate kind="library" />
         </div>
       ) : !sorted ? (
-        <Loader className="py-16" label="Loading saved sermons" />
+        <SavedSkeleton />
       ) : (
         <>
           <div className="mt-6 flex items-center justify-between gap-4">
@@ -69,5 +70,18 @@ export default function SavedSermonsScreen() {
         </>
       )}
     </Container>
+  );
+}
+
+// The count/sort line and a few rows, in their final places.
+function SavedSkeleton() {
+  return (
+    <>
+      <div className="mt-6 flex items-center justify-between gap-4">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-4 w-28" />
+      </div>
+      <SermonListSkeleton count={4} className="mt-4 lg:grid-cols-2" label="Loading saved sermons" />
+    </>
   );
 }

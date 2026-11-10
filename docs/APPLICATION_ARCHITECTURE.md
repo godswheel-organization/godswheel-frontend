@@ -62,7 +62,11 @@ godswheel-frontend/
     │   │   │   └── [id]/               # "/sermons/<id>" — sermon detail (server-rendered via getSermon)
     │   │   ├── search/                 # "/search" — Search: scope chips, results labelled by matched field
     │   │   ├── library/                # "/library" overview; saved/ and history/ sub-pages
-    │   │   └── settings/               # profile, analytics consent, clear history, data export, sign out
+    │   │   ├── settings/               # profile, analytics consent, clear history, data export, sign out
+    │   │   ├── report/                 # "/report?sermon=<id>" (or general): Report an issue
+    │   │   ├── about/                  # About and standards
+    │   │   ├── privacy-policy/         # Privacy notice ┐ one LegalScreen, two URLs,
+    │   │   └── terms-and-conditions/   # Terms          ┘ switched by a segmented control
     │   ├── (auth)/                     # AuthLayout (form; brand panel beside it ≥ lg)
     │   │   ├── sign-in/
     │   │   ├── sign-up/
@@ -82,6 +86,9 @@ godswheel-frontend/
     │   ├── notes/                      # notesApi + the "Add a note" sheet
     │   ├── bible/                      # bibleApi + the Bible sheet; KJV mock text
     │   ├── settings/                   # settingsApi + the Settings screen
+    │   ├── reports/                    # reportsApi, report schema, Report an issue screen (guests allowed)
+    │   ├── about/                      # About and standards screen + content.ts (draft copy to review)
+    │   ├── legal/                      # Privacy notice + Terms: content.ts (DRAFT, needs legal review) + LegalScreen
     │   └── auth/                       # template for every feature:
     │       ├── api/                    #   RTK Query api slice (createApi + baseQuery)
     │       ├── components/             #   feature-specific components
@@ -227,6 +234,13 @@ in IndexedDB (database `godswheel-mock-api`). It is switched by `NEXT_PUBLIC_USE
   for a `query`; components use the generated hooks and won't change.
 - **Shared components must not import from `features/`.** `AppShell` takes the account button and mini player
   as props from `app/(app)/layout.tsx` for that reason.
+
+### Loading states
+
+Content that loads shows a **skeleton in its final shape**, not a spinner: `shared/ui/skeleton/Skeleton`
+(blocks, wrapped in a `SkeletonGroup` that screen readers announce once), `SermonListSkeleton` for sermon rows,
+and `LibrarySkeletons` for history and the Library overview. `app/(app)/loading.tsx` covers page navigation.
+Add a skeleton beside any new list or card that waits on data.
 
 ### PWA
 

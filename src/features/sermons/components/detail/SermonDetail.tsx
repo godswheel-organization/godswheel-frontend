@@ -2,7 +2,7 @@ import Link from "next/link";
 import SaveSermonButton from "@/features/library/components/SaveSermonButton";
 import SermonPlayButton from "@/features/player/components/SermonPlayButton";
 import { ROUTES } from "@/lib/routes";
-import BackButton from "@/shared/ui/button/BackButton";
+import PageHeader from "@/shared/layouts/PageHeader";
 import Chip from "@/shared/ui/chip/Chip";
 import ChipRow from "@/shared/ui/chip/ChipRow";
 import Container from "@/shared/ui/container/Container";
@@ -22,11 +22,13 @@ export default function SermonDetail({ sermon }: SermonDetailProps) {
 
   return (
     <Container className="py-4 md:py-8">
-      <header className="grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center">
-        <BackButton icon="back" label="Back" fallbackHref={ROUTES.sermons} />
-        <p className="text-center text-base font-semibold text-foreground">Sermon detail</p>
-        <ShareSermonButton sermon={sermon} />
-      </header>
+      <PageHeader
+        title="Sermon detail"
+        backHref={ROUTES.sermons}
+        variant="compact"
+        titleAs="p"
+        action={<ShareSermonButton sermon={sermon} />}
+      />
 
       <div className="mt-6 md:mt-8 md:grid md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] md:items-start md:gap-10 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-14">
         <SermonArtwork
@@ -54,7 +56,7 @@ export default function SermonDetail({ sermon }: SermonDetailProps) {
             <p className="mt-3 max-w-prose leading-relaxed text-muted">{sermon.description}</p>
           </section>
 
-          <ChipRow label="Topics" className="mt-6">
+          <ChipRow label="Categories" className="mt-6">
             {topics.map((topic) => (
               <li key={topic}>
                 <Chip href={ROUTES.sermonsByTopic(topic)}>{TOPICS[topic].label}</Chip>

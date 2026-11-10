@@ -49,10 +49,10 @@ function FilterForm({ initial, onApply }: { initial: SheetFilters; onApply: (fil
     >
       <SelectField
         id="filter-topic"
-        label="Topic"
+        label="Category"
         value={draft.topic ?? ""}
         onChange={(event) => setDraft({ ...draft, topic: (event.target.value || undefined) as SermonTopic | undefined })}
-        options={[{ value: "", label: "All topics" }, ...TOPIC_ORDER.map((topic) => ({ value: topic, label: TOPICS[topic].label }))]}
+        options={[{ value: "", label: "All categories" }, ...TOPIC_ORDER.map((topic) => ({ value: topic, label: TOPICS[topic].label }))]}
       />
       <SelectField
         id="filter-speaker"

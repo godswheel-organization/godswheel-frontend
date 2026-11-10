@@ -11,10 +11,21 @@ interface ConfirmSheetProps {
   confirmLabel: string;
   onConfirm: () => void | Promise<void>;
   busy?: boolean;
+  // "danger" (coral) for actions that destroy something; "default" (brand orange) for ones you can undo, like signing out.
+  tone?: "danger" | "default";
 }
 
-// "Are you sure?" for actions that can't be undone (e.g. clearing listening history).
-export default function ConfirmSheet({ open, onOpenChange, title, message, confirmLabel, onConfirm, busy }: ConfirmSheetProps) {
+// "Are you sure?" before a significant action (e.g. clearing listening history, signing out).
+export default function ConfirmSheet({
+  open,
+  onOpenChange,
+  title,
+  message,
+  confirmLabel,
+  onConfirm,
+  busy,
+  tone = "danger",
+}: ConfirmSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange} title={title}>
       <p className="text-muted">{message}</p>
@@ -27,7 +38,7 @@ export default function ConfirmSheet({ open, onOpenChange, title, message, confi
           size="lg"
           disabled={busy}
           onClick={() => void onConfirm()}
-          className="bg-danger text-ink hover:bg-danger/85 disabled:bg-danger/60"
+          className={tone === "danger" ? "bg-danger text-ink hover:bg-danger/85 disabled:bg-danger/60" : undefined}
         >
           {confirmLabel}
         </Button>

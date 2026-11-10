@@ -7,11 +7,12 @@ import { useSession } from "@/features/auth/hooks/useSession";
 import { ROUTES } from "@/lib/routes";
 import PageHeader from "@/shared/layouts/PageHeader";
 import Container from "@/shared/ui/container/Container";
-import Loader from "@/shared/ui/loaders/Loader";
+import { Skeleton } from "@/shared/ui/skeleton/Skeleton";
 import ConfirmSheet from "@/shared/ui/modal/ConfirmSheet";
 import { useClearHistoryMutation, useGetHistoryQuery } from "../api/libraryApi";
 import { groupByDay } from "../lib/history";
 import HistoryRow from "./HistoryRow";
+import { HistoryListSkeleton } from "./LibrarySkeletons";
 
 export default function RecentlyPlayedScreen() {
   const { isSignedIn, isLoading: sessionLoading } = useSession();
@@ -34,13 +35,13 @@ export default function RecentlyPlayedScreen() {
       <PageHeader title="Recently played" backHref={ROUTES.library} />
 
       {sessionLoading ? (
-        <Loader className="py-16" label="Loading listening history" />
+        <HistorySkeleton />
       ) : !isSignedIn ? (
         <div className="mt-8">
           <SignInGate kind="library" />
         </div>
       ) : !history ? (
-        <Loader className="py-16" label="Loading listening history" />
+        <HistorySkeleton />
       ) : (
         <>
           <div className="mt-6 flex items-center justify-between gap-4">
@@ -94,5 +95,19 @@ export default function RecentlyPlayedScreen() {
         busy={clearing}
       />
     </Container>
+  );
+}
+
+// The count line, a day heading and a few rows, in their final places.
+function HistorySkeleton() {
+  return (
+    <>
+      <div className="mt-6 flex items-center justify-between gap-4">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+      <Skeleton className="mt-6 h-5 w-20" />
+      <HistoryListSkeleton count={3} className="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-2" />
+    </>
   );
 }

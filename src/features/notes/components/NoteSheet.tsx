@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils/cn";
 import Button from "@/shared/ui/button/Button";
 import { inputClasses, invalidInputClasses } from "@/shared/ui/form/inputStyles";
 import Sheet from "@/shared/ui/modal/Sheet";
+import { Skeleton, SkeletonGroup } from "@/shared/ui/skeleton/Skeleton";
 import { useAddNoteMutation, useGetNotesQuery } from "../api/notesApi";
 
 const MAX_LENGTH = 2000;
@@ -99,6 +100,17 @@ function NoteEditor({ sermon, atSeconds, onDone }: { sermon: Sermon; atSeconds: 
           </Button>
         </div>
       </form>
+
+      {!notes && (
+        <SkeletonGroup label="Loading your notes" className="flex flex-col gap-3">
+          <Skeleton className="h-4 w-48" />
+          <div className="flex flex-col gap-2.5 rounded-xl bg-ink/40 p-4">
+            <Skeleton className="h-3 w-14" />
+            <Skeleton className="h-3.5 w-full" />
+            <Skeleton className="h-3.5 w-2/3" />
+          </div>
+        </SkeletonGroup>
+      )}
 
       {notes && notes.length > 0 && (
         <section aria-labelledby="your-notes">

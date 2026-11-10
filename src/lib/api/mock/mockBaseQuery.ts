@@ -27,7 +27,7 @@ export const mockBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQu
 
   const response = await handleMockRequest(
     { url, method, params, body },
-    { db, userId: await db.session.userId(), now: () => new Date() }
+    { db, store, userId: await db.session.userId(), now: () => new Date() }
   );
   await new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS));
 

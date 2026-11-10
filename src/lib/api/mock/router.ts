@@ -3,11 +3,12 @@ import { authRoutes } from "./handlers/auth";
 import { bibleRoutes } from "./handlers/bible";
 import { libraryRoutes } from "./handlers/library";
 import { noteRoutes } from "./handlers/notes";
+import { reportRoutes } from "./handlers/reports";
 import { sermonRoutes } from "./handlers/sermons";
 import { fail, type MockContext, type MockResponse, type MockRoute } from "./http";
 
 // First match wins, so literal paths ("/sermons/search") come before parameterised ones ("/sermons/:sermonId").
-const ROUTES: MockRoute[] = [...authRoutes, ...sermonRoutes, ...libraryRoutes, ...noteRoutes, ...accountRoutes, ...bibleRoutes];
+const ROUTES: MockRoute[] = [...authRoutes, ...sermonRoutes, ...libraryRoutes, ...noteRoutes, ...accountRoutes, ...bibleRoutes, ...reportRoutes];
 
 const compiled = ROUTES.map((route) => ({
   route,

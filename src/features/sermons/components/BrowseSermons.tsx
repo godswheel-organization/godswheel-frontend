@@ -12,6 +12,7 @@ import ActiveFilters from "./ActiveFilters";
 import FilterSheet from "./FilterSheet";
 import ResultsBar from "./ResultsBar";
 import SermonListItem from "./SermonListItem";
+import SermonListSkeleton from "./SermonListSkeleton";
 import SermonSearchInput from "./SermonSearchInput";
 import TopicChips from "./TopicChips";
 
@@ -96,6 +97,8 @@ export default function BrowseSermons({ title }: BrowseSermonsProps) {
             </Button>
           </div>
         )}
+
+        {!data && !isError && <SermonListSkeleton className="mt-4 lg:grid-cols-2" count={4} />}
 
         {data && data.items.length > 0 && (
           <ul className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">

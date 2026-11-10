@@ -1,7 +1,7 @@
 {
   "name": "GodsWheel",
   "short_name": "GodsWheel",
-  "description": "Find sermons by speaker, topic or scripture.",
+  "description": "Find sermons by speaker, category or scripture.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

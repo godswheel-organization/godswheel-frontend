@@ -5,13 +5,14 @@ import Link from "next/link";
 import SignInGate from "@/features/auth/components/account-prompt/SignInGate";
 import { useSession } from "@/features/auth/hooks/useSession";
 import SermonListItem from "@/features/sermons/components/SermonListItem";
+import SermonListSkeleton, { SermonListItemSkeleton } from "@/features/sermons/components/SermonListSkeleton";
 import { ROUTES } from "@/lib/routes";
 import Container from "@/shared/ui/container/Container";
-import Loader from "@/shared/ui/loaders/Loader";
 import { useGetHistoryQuery, useGetSavedSermonsQuery } from "../api/libraryApi";
 import { latestUnfinished } from "../lib/history";
 import ContinueListeningCard from "./ContinueListeningCard";
 import HistoryRow from "./HistoryRow";
+import { HistoryListSkeleton, LibraryOverviewSkeleton } from "./LibrarySkeletons";
 
 // How many of each list the overview shows before "See all".
 const PREVIEW_COUNT = 2;
@@ -28,22 +29,23 @@ export default function LibraryOverview() {
       <h1 className="text-3xl font-bold text-foreground">Your library</h1>
 
       {sessionLoading ? (
-        <Loader className="py-16" label="Loading your library" />
+        <LibraryOverviewSkeleton />
       ) : !isSignedIn ? (
         <div className="mt-8">
           <SignInGate kind="library" />
         </div>
       ) : (
         <div className="mt-8 flex flex-col gap-10">
-          {resume && (
+          {/* While history loads, hold the section's place so the page doesn't jump when it arrives. */}
+          {(resume || !history) && (
             <Section id="continue" title="Continue listening">
-              <ContinueListeningCard entry={resume} />
+              {resume ? <ContinueListeningCard entry={resume} /> : <SermonListItemSkeleton />}
             </Section>
           )}
 
           <Section id="saved" title="Saved sermons" seeAllHref={saved?.length ? ROUTES.librarySaved : undefined}>
             {!saved ? (
-              <Loader className="py-6" size={28} label="Loading saved sermons" />
+              <SermonListSkeleton count={PREVIEW_COUNT} className="lg:grid-cols-2" label="Loading saved sermons" />
             ) : saved.length === 0 ? (
               <Empty>Nothing saved yet. Tap the bookmark on any sermon to keep it here.</Empty>
             ) : (
@@ -59,7 +61,7 @@ export default function LibraryOverview() {
 
           <Section id="recent" title="Recently played" seeAllHref={history?.length ? ROUTES.libraryHistory : undefined}>
             {!history ? (
-              <Loader className="py-6" size={28} label="Loading listening history" />
+              <HistoryListSkeleton count={PREVIEW_COUNT} />
             ) : history.length === 0 ? (
               <Empty>Sermons you play will show up here.</Empty>
             ) : (

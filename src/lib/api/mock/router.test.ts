@@ -12,7 +12,7 @@ let store: MockStore;
 // Sends a request the way mockBaseQuery does: the session comes from the store.
 async function call(method: string, url: string, extra: Omit<IncomingMockRequest, "method" | "url"> = {}) {
   const db = records(store);
-  return handleMockRequest({ method, url, ...extra }, { db, userId: await db.session.userId(), now: () => NOW });
+  return handleMockRequest({ method, url, ...extra }, { db, store, userId: await db.session.userId(), now: () => NOW });
 }
 
 const signInDemo = () => call("POST", "/auth/login", { body: DEMO_ACCOUNT });
@@ -158,5 +158,21 @@ describe("mock sermons and Bible", () => {
 
   it("answers 404 for unknown routes", async () => {
     expect((await call("GET", "/nowhere")).status).toBe(404);
+  });
+});
+
+describe("mock reports", () => {
+  it("takes a report from a guest, about a sermon or in general", async () => {
+    const aboutSermon = await call("POST", "/reports", { body: { sermonId: "arise-and-shine", reason: "rights_concern", details: "", email: "" } });
+    expect(aboutSermon.status).toBe(201);
+    expect((await call("POST", "/reports", { body: { reason: "other", details: "The app is great", email: "a@b.co" } })).status).toBe(201);
+    expect(await store.get<unknown[]>("reports")).toHaveLength(2);
+  });
+
+  it("rejects incomplete or invalid reports", async () => {
+    expect((await call("POST", "/reports", { body: { reason: "spam" } })).status).toBe(400);
+    expect((await call("POST", "/reports", { body: { reason: "other", details: "  " } })).status).toBe(400);
+    expect((await call("POST", "/reports", { body: { reason: "other", details: "x", email: "nope" } })).status).toBe(400);
+    expect((await call("POST", "/reports", { body: { reason: "other", details: "x", sermonId: "missing" } })).status).toBe(404);
   });
 });

@@ -23,7 +23,7 @@ const lora = Lora({
 
 export const metadata: Metadata = {
   title: { default: "GodsWheel", template: "%s · GodsWheel" },
-  description: "Find sermons by speaker, topic or scripture.",
+  description: "Find sermons by speaker, category or scripture.",
   manifest: "/manifest.webmanifest",
 };
 

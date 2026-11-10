@@ -6,10 +6,11 @@ import { bibleApi } from "@/features/bible/api/bibleApi";
 import { libraryApi } from "@/features/library/api/libraryApi";
 import { notesApi } from "@/features/notes/api/notesApi";
 import playerReducer from "@/features/player/store/playerSlice";
+import { reportsApi } from "@/features/reports/api/reportsApi";
 import { sermonsApi } from "@/features/sermons/api/sermonsApi";
 import { settingsApi } from "@/features/settings/api/settingsApi";
 
-const apis = [authApi, sermonsApi, libraryApi, notesApi, settingsApi, bibleApi] as const;
+const apis = [authApi, sermonsApi, libraryApi, notesApi, settingsApi, bibleApi, reportsApi] as const;
 
 // Each feature registers its RTK Query api slice (reducer + middleware) and any client-state slices here.
 export const store = configureStore({
@@ -22,6 +23,7 @@ export const store = configureStore({
     [notesApi.reducerPath]: notesApi.reducer,
     [settingsApi.reducerPath]: settingsApi.reducer,
     [bibleApi.reducerPath]: bibleApi.reducer,
+    [reportsApi.reducerPath]: reportsApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(...apis.map((api) => api.middleware)),
 });

@@ -5,7 +5,7 @@ import { ExternalLink } from "lucide-react";
 import type { Sermon } from "@/features/sermons/types";
 import ChipButton from "@/shared/ui/chip/ChipButton";
 import SelectField from "@/shared/ui/form/SelectField";
-import Loader from "@/shared/ui/loaders/Loader";
+import { Skeleton, SkeletonGroup } from "@/shared/ui/skeleton/Skeleton";
 import Sheet from "@/shared/ui/modal/Sheet";
 import { useGetBibleVersionsQuery, useGetPassageQuery } from "../api/bibleApi";
 import { fullChapterUrl } from "../lib/chapter";
@@ -64,7 +64,11 @@ function BibleReader({ sermon }: { sermon: Sermon }) {
       <article aria-live="polite" aria-busy={isFetching} className="min-h-32 rounded-2xl bg-ink/40 p-5">
         <h3 className="font-semibold text-foreground">{reference}</h3>
         {isFetching && !passage ? (
-          <Loader className="mt-4 justify-start sm:justify-start" size={24} label="Loading passage" />
+          <SkeletonGroup label="Loading passage" className="mt-4 flex flex-col gap-2.5">
+            <Skeleton className="h-3.5 w-full" />
+            <Skeleton className="h-3.5 w-11/12" />
+            <Skeleton className="h-3.5 w-3/5" />
+          </SkeletonGroup>
         ) : isError ? (
           <p className="mt-3 text-muted">This passage isn&rsquo;t available in this version yet.</p>
         ) : (

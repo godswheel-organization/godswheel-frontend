@@ -1,4 +1,5 @@
 import type { MockRecords } from "./records";
+import type { MockStore } from "./store";
 
 export interface MockRequest {
   method: string;
@@ -11,6 +12,8 @@ export interface MockRequest {
 
 export interface MockContext {
   db: MockRecords;
+  // The raw key-value store, for data with no typed accessor in records.ts (e.g. submitted reports).
+  store: MockStore;
   // The signed-in user, or null for a guest.
   userId: string | null;
   now: () => Date;

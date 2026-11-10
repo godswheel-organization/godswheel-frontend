@@ -15,10 +15,10 @@ import { saveBlob } from "@/lib/utils/saveBlob";
 import Button from "@/shared/ui/button/Button";
 import Container from "@/shared/ui/container/Container";
 import Switch from "@/shared/ui/form/Switch";
-import Loader from "@/shared/ui/loaders/Loader";
+import { Skeleton, SkeletonGroup } from "@/shared/ui/skeleton/Skeleton";
+import ListRow from "@/shared/ui/list/ListRow";
 import ConfirmSheet from "@/shared/ui/modal/ConfirmSheet";
 import { useExportMyDataMutation, useGetSettingsQuery, useUpdateSettingsMutation } from "../api/settingsApi";
-import SettingsRow from "./SettingsRow";
 
 export default function SettingsScreen() {
   const { session, isSignedIn, isLoading } = useSession();
@@ -29,7 +29,7 @@ export default function SettingsScreen() {
         <h1 className="text-3xl font-bold text-foreground">Settings</h1>
 
         {isLoading ? (
-          <Loader className="py-16" label="Loading settings" />
+          <SettingsSkeleton />
         ) : (
           <div className="mt-8 flex flex-col gap-10">
             {session ? (
@@ -51,10 +51,10 @@ export default function SettingsScreen() {
             {isSignedIn && <PrivacySection />}
 
             <Group title="Account and about">
-              {isSignedIn && <SettingsRow label="Change password" href={ROUTES.forgotPassword} />}
-              <SettingsRow label="About and standards" href={ROUTES.about} />
-              <SettingsRow label="Report an issue" href={ROUTES.report} />
-              <SettingsRow label="Privacy notice and Terms" href={ROUTES.privacy} />
+              {isSignedIn && <ListRow label="Change password" href={ROUTES.forgotPassword} />}
+              <ListRow label="About and standards" href={ROUTES.about} />
+              <ListRow label="Report an issue" href={ROUTES.report} />
+              <ListRow label="Privacy notice and Terms" href={ROUTES.privacy} />
             </Group>
 
             {isSignedIn && <SignOutButton />}
@@ -122,8 +122,8 @@ function PrivacySection() {
           onChange={setAnalytics}
         />
       </li>
-      <SettingsRow label="Clear listening history" onClick={() => setConfirmClear(true)} />
-      <SettingsRow label={exporting ? "Preparing your data…" : "Request a copy of my data"} onClick={downloadData} disabled={exporting} />
+      <ListRow label="Clear listening history" onClick={() => setConfirmClear(true)} />
+      <ListRow label={exporting ? "Preparing your data…" : "Request a copy of my data"} onClick={downloadData} disabled={exporting} />
 
       <ConfirmSheet
         open={confirmClear}
@@ -142,20 +142,58 @@ function SignOutButton() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [signOut, { isLoading }] = useSignOutMutation();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleSignOut = async () => {
     // Even if the server can't be reached, forget everything on this device.
     await signOut()
       .unwrap()
       .catch(() => undefined);
+    setConfirmOpen(false);
     clearUserData(dispatch);
     toast.success("Signed out");
     router.replace(ROUTES.home);
   };
 
   return (
-    <Button type="button" variant="secondary" size="lg" disabled={isLoading} onClick={handleSignOut} className="w-full">
-      {isLoading ? "Signing out…" : "Sign out"}
-    </Button>
+    <>
+      <Button type="button" variant="secondary" size="lg" onClick={() => setConfirmOpen(true)} className="w-full">
+        Sign out
+      </Button>
+      <ConfirmSheet
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Sign out?"
+        message="You'll need to sign in again to see your library. Your saved sermons, listening history and notes stay in your account."
+        confirmLabel={isLoading ? "Signing out…" : "Sign out"}
+        onConfirm={handleSignOut}
+        busy={isLoading}
+        tone="default"
+      />
+    </>
+  );
+}
+
+// The profile card and a list of rows, in their final places.
+function SettingsSkeleton() {
+  return (
+    <SkeletonGroup label="Loading settings" className="mt-8 flex flex-col gap-10">
+      <div className="flex items-center gap-4 rounded-2xl border border-border p-4">
+        <Skeleton className="size-12 shrink-0 rounded-full" />
+        <div className="flex flex-1 flex-col gap-2.5">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-48" />
+        </div>
+      </div>
+      <div>
+        <Skeleton className="h-5 w-40" />
+        {Array.from({ length: 4 }, (_, index) => (
+          <div key={index} className="flex items-center justify-between border-b border-border py-5">
+            <Skeleton className="h-4 w-44" />
+            <Skeleton className="size-4" />
+          </div>
+        ))}
+      </div>
+    </SkeletonGroup>
   );
 }

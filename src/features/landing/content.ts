@@ -1,16 +1,16 @@
-import { Bookmark, Headphones, Search, type LucideIcon } from "lucide-react";
+import { Bookmark, Headphones, NotebookPen, Search, Share2, type LucideIcon } from "lucide-react";
 import type { NavItem } from "@/shared/layouts/SiteHeader";
 
 // All landing-page copy lives here — keep it short; components only lay it out.
 
 export const SECTION_IDS = {
-  topics: "topics",
+  topics: "categories",
   featured: "featured",
   howItWorks: "how-it-works",
 } as const;
 
 export const LANDING_NAV: NavItem[] = [
-  { label: "Topics", href: `#${SECTION_IDS.topics}` },
+  { label: "Categories", href: `#${SECTION_IDS.topics}` },
   { label: "Featured", href: `#${SECTION_IDS.featured}` },
   { label: "How it works", href: `#${SECTION_IDS.howItWorks}` },
 ];
@@ -25,7 +25,7 @@ export const HERO_COPY = {
 };
 
 export const TOPICS_COPY = {
-  eyebrow: "Topics",
+  eyebrow: "Categories",
   title: "Start where you are",
 };
 
@@ -48,6 +48,8 @@ export const HOW_IT_WORKS_COPY = {
     { icon: Search, title: "Search", description: "Find a message by speaker, topic or verse." },
     { icon: Headphones, title: "Listen", description: "Press play. No sign-up needed." },
     { icon: Bookmark, title: "Save", description: "Keep favourites in your library with a free account." },
+    { icon: NotebookPen, title: "Note", description: "Write a note at the moment a message speaks to you." },
+    { icon: Share2, title: "Share", description: "Send a sermon to someone who needs to hear it." },
   ] satisfies Step[],
 };
 
