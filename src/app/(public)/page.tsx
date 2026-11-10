@@ -1,15 +1,25 @@
-import MinimalHeader from "@/shared/layouts/MinimalHeader";
+import ClosingCta from "@/features/landing/components/ClosingCta";
+import FeaturedSermons from "@/features/landing/components/FeaturedSermons";
+import Hero from "@/features/landing/components/Hero";
+import HowItWorks from "@/features/landing/components/HowItWorks";
+import TopicGrid from "@/features/landing/components/TopicGrid";
+import { LANDING_NAV } from "@/features/landing/content";
+import { featuredSermons } from "@/features/sermons/mocks/sermons";
+import SiteFooter from "@/shared/layouts/SiteFooter";
+import SiteHeader from "@/shared/layouts/SiteHeader";
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
-      <MinimalHeader />
-      <main className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-        <h1 className="text-title-sm font-semibold text-foreground">Godswheel</h1>
-        <p className="max-w-md text-muted">
-          Pages are built under <code>src/app</code>; their logic lives in <code>src/features</code>.
-        </p>
+      <SiteHeader nav={LANDING_NAV} />
+      <main className="flex-1">
+        <Hero featuredSermon={featuredSermons[0]} />
+        <TopicGrid />
+        <FeaturedSermons sermons={featuredSermons} />
+        <HowItWorks />
+        <ClosingCta />
       </main>
+      <SiteFooter />
     </div>
   );
 }

@@ -4,7 +4,21 @@ export interface SignInRequest {
   password: string;
 }
 
+export interface SignUpRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  termsAccepted: true;
+}
+
+export interface PasswordResetRequest {
+  email: string;
+}
+
 export interface AuthSession {
   userId: string;
-  role: string;
+  firstName: string;
+  lastName: string;
+  email: string;
 }

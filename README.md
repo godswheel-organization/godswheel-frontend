@@ -31,6 +31,12 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) (or whatever `PORT` is set to in `.env.local`).
 
+### Dummy data (until the backend is ready)
+
+With `NEXT_PUBLIC_USE_MOCK_API=true` (the default), the app runs against an in-browser mock backend whose data
+lives in IndexedDB. Sign in with **ada.okafor@example.com / password123**, or create a new account. See
+[docs/APPLICATION_ARCHITECTURE.md](docs/APPLICATION_ARCHITECTURE.md#dummy-data-the-mock-backend).
+
 ## Environment variables
 
 See [.env.example](.env.example) for the full list. `src/lib/env.ts` validates
@@ -41,6 +47,7 @@ them at boot and fails fast if any are missing or malformed:
 | `NEXT_PUBLIC_API_BASE_URL` | Base URL of the backend REST API |
 | `NEXT_PUBLIC_SESSION_COOKIE_NAME` | Session cookie name, read by `src/proxy.ts` to guard protected routes |
 | `NEXT_PUBLIC_ENABLE_PWA` | Dev-only PWA toggle. The PWA is always on in production; in dev, use `npm run dev:pwa` instead of setting this |
+| `NEXT_PUBLIC_USE_MOCK_API` | `true` (default) answers API calls with the in-browser mock backend; `false` calls `NEXT_PUBLIC_API_BASE_URL` |
 | `API_PROXY_TARGET` | Optional. Forwards `/v1/*` to the backend so the browser sees one host (for host-only cookies) |
 
 ## Scripts
