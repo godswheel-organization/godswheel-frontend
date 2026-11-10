@@ -28,6 +28,7 @@ import type { Sermon } from "@/features/sermons/types";
 import { ROUTES } from "@/lib/routes";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
 import Sheet from "@/shared/ui/modal/Sheet";
+import { useReturnFocus } from "@/shared/ui/modal/useReturnFocus";
 import { closePlayer, durationOf, setExpanded, skipBy, togglePlayback } from "../store/playerSlice";
 import PlayerAction from "./PlayerAction";
 import SeekBar from "./SeekBar";
@@ -38,11 +39,13 @@ const SKIP_SECONDS = 15;
 export default function FullPlayer() {
   const dispatch = useAppDispatch();
   const { current, expanded } = useAppSelector((state) => state.player);
+  const returnFocus = useReturnFocus();
 
   return (
     <Dialog.Root open={expanded && current !== null} onOpenChange={(open) => dispatch(setExpanded(open))}>
       <Dialog.Portal>
         <Dialog.Content
+          {...returnFocus}
           aria-describedby={undefined}
           className="fixed inset-0 z-40 overflow-y-auto bg-background focus:outline-none motion-safe:data-[state=open]:animate-sheet-up"
         >

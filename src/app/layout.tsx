@@ -17,6 +17,8 @@ const geistMono = Geist_Mono({
 const lora = Lora({
   variable: "--font-lora",
   subsets: ["latin"],
+  // Italic for quoted scripture (the sidebar verse card).
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {

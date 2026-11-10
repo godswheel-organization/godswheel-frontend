@@ -23,7 +23,7 @@ export default function MiniPlayer() {
 
       <section
         aria-label="Now playing"
-        className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 md:bottom-0 md:left-64"
+        className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 md:bottom-0 md:left-64 md:transition-[left] md:duration-200 md:group-data-[sidebar=collapsed]/shell:left-20"
       >
         <div className="h-1 bg-surface-raised">
           <div className="h-full bg-brand-500" style={{ width: `${progress * 100}%` }} />

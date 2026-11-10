@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useReturnFocus } from "./useReturnFocus";
 
 interface SheetProps {
   open: boolean;
@@ -21,12 +22,14 @@ interface SheetProps {
 // scroll locking, and stacks correctly when one sheet opens over another (e.g. Bible over the player).
 export default function Sheet({ open, onOpenChange, title, subtitle, children }: SheetProps) {
   const ownHeading = title === undefined;
+  const returnFocus = useReturnFocus();
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/70 backdrop-blur-sm motion-safe:data-[state=open]:animate-fade-in" />
         <Dialog.Content
+          {...returnFocus}
           aria-describedby={undefined}
           className="fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-3xl border-t border-border bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-theme-xl focus:outline-none motion-safe:data-[state=open]:animate-sheet-up md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:w-full md:max-w-md md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-3xl md:border md:p-6 md:motion-safe:data-[state=open]:animate-fade-in"
         >
