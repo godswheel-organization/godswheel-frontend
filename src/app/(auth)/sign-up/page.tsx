@@ -14,7 +14,7 @@ export default function SignUpPage() {
       <BackButton icon="back" label="Go back" fallbackHref={ROUTES.signIn} />
       <Logo className="mt-8" />
 
-      <h1 className="mt-6 text-3xl font-bold text-foreground">Create your account</h1>
+      <h1 className="mt-6 text-2xl font-bold text-foreground md:text-3xl">Create your account</h1>
 
       <div className="mt-8">
         <Suspense>

@@ -12,7 +12,7 @@ export default function ForgotPasswordPage() {
       <BackButton icon="back" label="Go back" fallbackHref={ROUTES.signIn} />
       <Logo className="mt-8" />
 
-      <h1 className="mt-6 text-3xl font-bold text-foreground">Reset your password</h1>
+      <h1 className="mt-6 text-2xl font-bold text-foreground md:text-3xl">Reset your password</h1>
       <p className="mt-2 text-muted">Enter your email and we&rsquo;ll send you a link to choose a new one.</p>
 
       <div className="mt-8">

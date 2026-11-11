@@ -21,7 +21,7 @@ export default function PageHeader({ title, backHref, action, variant = "page", 
       <Title
         className={cn(
           "truncate text-center text-foreground",
-          variant === "page" ? "font-serif text-3xl" : "text-base font-semibold"
+          variant === "page" ? "font-serif text-2xl md:text-3xl" : "text-base font-semibold"
         )}
       >
         {title}

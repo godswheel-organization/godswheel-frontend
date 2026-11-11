@@ -22,7 +22,7 @@ export default function AboutScreen() {
           </span>
         </div>
 
-        <h2 className="mt-8 text-3xl font-bold text-foreground">{ABOUT_COPY.title}</h2>
+        <h2 className="mt-8 text-2xl font-bold text-foreground md:text-3xl">{ABOUT_COPY.title}</h2>
         <p className="mt-3 leading-relaxed text-muted">{ABOUT_COPY.intro}</p>
 
         <div className="mt-8 flex flex-col gap-8">

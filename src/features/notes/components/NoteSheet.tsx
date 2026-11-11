@@ -1,21 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Pencil, Trash2 } from "lucide-react";
+import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { seekTo } from "@/features/player/store/playerSlice";
 import { formatPlaybackTime } from "@/features/sermons/lib/formatSermon";
 import type { Sermon } from "@/features/sermons/types";
 import { useAppDispatch } from "@/lib/store";
 import { cn } from "@/lib/utils/cn";
 import Button from "@/shared/ui/button/Button";
-import { inputClasses, invalidInputClasses } from "@/shared/ui/form/inputStyles";
 import Sheet, { SheetTitle } from "@/shared/ui/modal/Sheet";
 import { Skeleton, SkeletonGroup } from "@/shared/ui/skeleton/Skeleton";
-import { useDeleteNoteMutation, useGetNoteQuery, useSaveNoteMutation } from "../api/notesApi";
-import type { SermonNote } from "../types";
-
-const MAX_LENGTH = 2000;
+import { useGetNoteQuery } from "../api/notesApi";
+import { useNoteAutosave, type AutosaveStatus } from "../hooks/useNoteAutosave";
+import { docOf, NOTE_MAX_LENGTH } from "../lib/noteDoc";
+import { editorContentFor, noteEditorExtensions } from "../lib/noteEditorExtensions";
+import type { NoteDoc, SermonNote } from "../types";
+import NoteFormatMenu from "./NoteFormatMenu";
+import NoteMoreMenu from "./NoteMoreMenu";
 
 interface NoteSheetProps {
   open: boolean;
@@ -25,211 +27,159 @@ interface NoteSheetProps {
   atSeconds: number;
 }
 
-// One note per sermon: "Add a note" when there isn't one, otherwise the note with Edit and Delete.
+// One note per sermon, written like a Medium draft: straight onto the page, saved as you type,
+// formatted from a toolbar over selected text, with Copy and Delete in a ⋯ menu.
 export default function NoteSheet({ open, onOpenChange, sermon, atSeconds }: NoteSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SermonNotePanel sermon={sermon} atSeconds={atSeconds} onDone={() => onOpenChange(false)} />
+      <NotePanel sermon={sermon} atSeconds={atSeconds} onDone={() => onOpenChange(false)} />
     </Sheet>
   );
 }
 
-// Mounted with the sheet, so it always opens on the note itself (never mid-edit from last time).
-function SermonNotePanel({ sermon, atSeconds, onDone }: { sermon: Sermon; atSeconds: number; onDone: () => void }) {
+function NotePanel({ sermon, atSeconds, onDone }: { sermon: Sermon; atSeconds: number; onDone: () => void }) {
   const { data: note, isLoading } = useGetNoteQuery(sermon.id);
-  const [editing, setEditing] = useState(false);
 
   if (isLoading || note === undefined) {
     return (
       <>
-        <Heading title="Your note" subtitle={sermon.title} />
-        <SkeletonGroup label="Loading your note" className="mt-6 flex flex-col gap-2.5 rounded-xl bg-ink/40 p-4">
-          <Skeleton className="h-3 w-14" />
-          <Skeleton className="h-3.5 w-full" />
-          <Skeleton className="h-3.5 w-2/3" />
+        <Heading sermon={sermon} />
+        <SkeletonGroup label="Loading your note" className="mt-6 flex flex-col gap-2.5 py-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-11/12" />
+          <Skeleton className="h-4 w-2/3" />
         </SkeletonGroup>
       </>
     );
   }
 
-  if (!note) {
-    return (
-      <>
-        <Heading title="Add a note" subtitle={`${sermon.title} · at ${formatPlaybackTime(atSeconds)}`} />
-        <NoteEditor sermonId={sermon.id} atSeconds={atSeconds} saveLabel="Save note" onCancel={onDone} onSaved={() => undefined} />
-      </>
-    );
-  }
-
-  if (editing) {
-    return (
-      <>
-        <Heading title="Edit note" subtitle={`${sermon.title} · at ${formatPlaybackTime(note.atSeconds)}`} />
-        <NoteEditor
-          sermonId={sermon.id}
-          // Editing keeps the note tied to the moment it was first written.
-          atSeconds={note.atSeconds}
-          initialText={note.text}
-          saveLabel="Save changes"
-          onCancel={() => setEditing(false)}
-          onSaved={() => setEditing(false)}
-        />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <Heading title="Your note" subtitle={sermon.title} />
-      <NoteCard note={note} onEdit={() => setEditing(true)} onJump={onDone} />
-    </>
-  );
+  // Mounted once the note is known, so the editor starts from it (and later saves don't reset it).
+  return <NoteEditor sermon={sermon} note={note} atSeconds={atSeconds} onDone={onDone} />;
 }
 
-// The sheet's heading (the sheet itself has no fixed title, since it changes with the state).
-function Heading({ title, subtitle }: { title: string; subtitle: string }) {
+function Heading({ sermon, moment, onJump }: { sermon: Sermon; moment?: number; onJump?: () => void }) {
   return (
     <div className="pr-14">
-      <SheetTitle className="font-serif text-2xl text-foreground">{title}</SheetTitle>
-      <p className="mt-1.5 text-sm text-muted">{subtitle}</p>
+      <SheetTitle className="font-serif text-2xl text-foreground">Your note</SheetTitle>
+      <p className="mt-1.5 text-sm text-muted">
+        {sermon.title}
+        {moment !== undefined && (
+          <>
+            {" · "}
+            <button
+              type="button"
+              onClick={onJump}
+              aria-label={`Play from ${formatPlaybackTime(moment)}`}
+              className="font-medium text-brand-500 underline-offset-4 hover:underline"
+            >
+              at {formatPlaybackTime(moment)}
+            </button>
+          </>
+        )}
+      </p>
     </div>
   );
 }
 
 interface NoteEditorProps {
-  sermonId: string;
+  sermon: Sermon;
+  note: SermonNote | null;
   atSeconds: number;
-  initialText?: string;
-  saveLabel: string;
-  onCancel: () => void;
-  onSaved: () => void;
+  onDone: () => void;
 }
 
-function NoteEditor({ sermonId, atSeconds, initialText = "", saveLabel, onCancel, onSaved }: NoteEditorProps) {
-  const [saveNote, { isLoading }] = useSaveNoteMutation();
-  const [text, setText] = useState(initialText);
-  const [error, setError] = useState<string | null>(null);
+function NoteEditor({ sermon, note, atSeconds, onDone }: NoteEditorProps) {
+  const dispatch = useAppDispatch();
+  // A note stays tied to the moment it was first written; a new one is for where playback is now.
+  const [moment, setMoment] = useState(note?.atSeconds ?? atSeconds);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  const save = async () => {
-    const trimmed = text.trim();
-    if (!trimmed) {
-      setError("Write something first.");
-      return;
-    }
-    try {
-      await saveNote({ sermonId, atSeconds: Math.round(atSeconds), text: trimmed }).unwrap();
-      toast.success(initialText ? "Note updated" : "Note saved");
-      onSaved();
-    } catch {
-      setError("Couldn't save your note. Try again.");
-    }
+  const autosave = useNoteAutosave({ sermonId: sermon.id, hasNote: Boolean(note), atSeconds: moment });
+
+  // Worked out once, for the editor's starting content.
+  const [initialContent] = useState(() => {
+    const doc = docOf(note);
+    return doc && note ? editorContentFor(doc, note.text) : undefined;
+  });
+
+  const editor = useEditor({
+    extensions: noteEditorExtensions,
+    content: initialContent,
+    immediatelyRender: false,
+    editorProps: {
+      attributes: {
+        class: "note-prose min-h-48 py-2 focus:outline-none",
+        "aria-label": "Your note",
+        "aria-multiline": "true",
+        role: "textbox",
+      },
+    },
+    onUpdate: ({ editor: current }) =>
+      autosave.change({ text: current.getText({ blockSeparator: "\n" }).trim(), doc: current.getJSON() as NoteDoc }),
+  });
+
+  // A blank note is ready to type into; an existing one opens to be read, and a tap edits it.
+  // Done here, once the editor exists, so it lands after the sheet's own opening focus.
+  useEffect(() => {
+    if (editor && !note) editor.commands.focus("end");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only as the editor first appears
+  }, [editor]);
+
+  const characters =
+    useEditorState({
+      editor,
+      selector: ({ editor: current }) => (current ? (current.storage.characterCount.characters() as number) : 0),
+    }) ?? 0;
+
+  const jump = () => {
+    dispatch(seekTo(moment));
+    onDone();
   };
 
-  return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        void save();
-      }}
-      className="mt-6 flex flex-col gap-3"
-    >
-      <label htmlFor="note-text" className="sr-only">
-        Your note
-      </label>
-      <textarea
-        id="note-text"
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-        maxLength={MAX_LENGTH}
-        rows={5}
-        autoFocus
-        placeholder="Write your note here"
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? "note-error" : "note-count"}
-        className={cn(inputClasses, "resize-none bg-transparent", error && invalidInputClasses)}
-      />
-      <div className="flex justify-between text-xs">
-        <p id="note-error" className="text-danger">
-          {error}
-        </p>
-        <p id="note-count" className="text-muted">
-          {text.length}/{MAX_LENGTH}
-        </p>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <Button type="button" variant="secondary" size="lg" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" size="lg" disabled={isLoading}>
-          {isLoading ? "Saving…" : saveLabel}
-        </Button>
-      </div>
-    </form>
-  );
-}
-
-interface NoteCardProps {
-  note: SermonNote;
-  onEdit: () => void;
-  // After jumping playback to the note's moment, the sheet closes.
-  onJump: () => void;
-}
-
-function NoteCard({ note, onEdit, onJump }: NoteCardProps) {
-  const dispatch = useAppDispatch();
-  const [deleteNote, { isLoading: deleting }] = useDeleteNoteMutation();
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const at = formatPlaybackTime(note.atSeconds);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(editor?.getText({ blockSeparator: "\n\n" }).trim() ?? "");
+      toast.success("Note copied");
+    } catch {
+      toast.error("Couldn't copy your note.");
+    }
+  };
 
   const remove = async () => {
+    setDeleting(true);
     try {
-      await deleteNote(note.sermonId).unwrap();
+      await autosave.remove();
+      editor?.commands.clearContent(false);
+      setMoment(atSeconds);
+      setConfirmingDelete(false);
       toast.success("Note deleted");
+      editor?.commands.focus();
     } catch {
       toast.error("Couldn't delete your note. Try again.");
-      setConfirmingDelete(false);
+    } finally {
+      setDeleting(false);
     }
   };
 
-  const iconButton =
-    "flex size-10 items-center justify-center rounded-full text-foreground transition hover:bg-surface-raised disabled:opacity-60";
+  const nearLimit = characters >= NOTE_MAX_LENGTH * 0.9;
 
   return (
-    <article className="mt-6 rounded-xl bg-ink/40 p-4">
-      <div className="flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={() => {
-            dispatch(seekTo(note.atSeconds));
-            onJump();
-          }}
-          aria-label={`Play from ${at}`}
-          className="text-xs font-medium text-brand-500 underline-offset-4 hover:underline"
-        >
-          At {at}
-        </button>
-        {!confirmingDelete && (
-          <div className="-my-2 -mr-2 flex items-center">
-            <button type="button" onClick={onEdit} aria-label="Edit note" className={iconButton}>
-              <Pencil className="size-4" strokeWidth={1.75} aria-hidden />
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmingDelete(true)}
-              aria-label="Delete note"
-              className={cn(iconButton, "hover:text-danger")}
-            >
-              <Trash2 className="size-4" strokeWidth={1.75} aria-hidden />
-            </button>
-          </div>
-        )}
+    <>
+      <Heading sermon={sermon} moment={moment} onJump={jump} />
+
+      {/* Medium's draft bar: save state on the left, ⋯ on the right. */}
+      <div className="mt-5 flex items-center justify-between gap-3 border-b border-border pb-2">
+        <SaveState status={autosave.status} onRetry={() => void autosave.flush()} />
+        <NoteMoreMenu
+          disabled={autosave.status === "empty" || confirmingDelete}
+          onCopy={() => void copy()}
+          onDelete={() => setConfirmingDelete(true)}
+        />
       </div>
 
-      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground">{note.text}</p>
-
-      {/* Confirmed here, in the card, rather than in yet another sheet stacked over the player. */}
       {confirmingDelete && (
-        <div role="alertdialog" aria-labelledby="delete-note-question" className="mt-4 border-t border-border pt-4">
+        <div role="alertdialog" aria-labelledby="delete-note-question" className="mt-4 rounded-xl bg-ink/40 p-4">
           <p id="delete-note-question" className="text-sm text-foreground">
             Delete this note? This can&rsquo;t be undone.
           </p>
@@ -250,6 +200,50 @@ function NoteCard({ note, onEdit, onJump }: NoteCardProps) {
           </div>
         </div>
       )}
-    </article>
+
+      {/* relative: the format toolbar positions itself within this box. */}
+      <div className="relative mt-3">
+        {editor ? (
+          <>
+            <EditorContent editor={editor} />
+            <NoteFormatMenu editor={editor} />
+          </>
+        ) : (
+          <div className="min-h-48" />
+        )}
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4">
+        <p className={cn("text-xs", nearLimit ? "text-danger" : "text-muted")}>
+          {nearLimit
+            ? `${characters.toLocaleString()}/${NOTE_MAX_LENGTH.toLocaleString()} characters`
+            : "Select text to format it"}
+        </p>
+        <Button type="button" size="sm" onClick={onDone}>
+          Done
+        </Button>
+      </div>
+    </>
   );
+}
+
+const STATUS_LABEL: Record<Exclude<AutosaveStatus, "error">, string> = {
+  empty: "Saves as you type",
+  unsaved: "Saving…",
+  saving: "Saving…",
+  saved: "Saved",
+};
+
+function SaveState({ status, onRetry }: { status: AutosaveStatus; onRetry: () => void }) {
+  if (status === "error") {
+    return (
+      <p role="alert" className="text-sm text-danger">
+        Couldn&rsquo;t save.{" "}
+        <button type="button" onClick={onRetry} className="font-medium underline underline-offset-4">
+          Try again
+        </button>
+      </p>
+    );
+  }
+  return <p className="text-sm text-muted">{STATUS_LABEL[status]}</p>;
 }

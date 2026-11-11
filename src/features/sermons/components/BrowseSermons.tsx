@@ -55,7 +55,7 @@ export default function BrowseSermons({ title }: BrowseSermonsProps) {
 
   return (
     <Container className="py-6 md:py-10">
-      <h1 className="text-3xl font-bold text-foreground">{title}</h1>
+      <h1 className="text-2xl font-bold text-foreground md:text-3xl">{title}</h1>
 
       <div className="mt-6 flex items-center gap-3">
         <SermonSearchInput value={filters.q ?? ""} onSearch={(q) => update({ q })} />

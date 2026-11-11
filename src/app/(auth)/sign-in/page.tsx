@@ -18,7 +18,7 @@ export default function SignInPage() {
       <BackButton icon="close" label="Close sign in" fallbackHref={ROUTES.home} />
       <Logo className="mt-8" />
 
-      <h1 className="mt-6 text-3xl font-bold text-foreground">Welcome back</h1>
+      <h1 className="mt-6 text-2xl font-bold text-foreground md:text-3xl">Welcome back</h1>
       <p className="mt-2 text-muted">Sign in to save sermons and pick up where you stopped.</p>
 
       {/* {env.NEXT_PUBLIC_USE_MOCK_API && (

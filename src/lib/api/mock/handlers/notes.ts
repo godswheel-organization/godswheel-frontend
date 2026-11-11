@@ -1,8 +1,7 @@
+import { isNoteDoc, NOTE_MAX_LENGTH } from "@/features/notes/lib/noteDoc";
 import type { SermonNote } from "@/features/notes/types";
 import { sermons } from "@/features/sermons/mocks/sermons";
 import { fail, field, noContent, ok, text, type MockRoute } from "../http";
-
-export const NOTE_MAX_LENGTH = 2000;
 
 // One note per sermon. Stored data from before that rule may hold several for a sermon: the most recent wins,
 // and the next save replaces them all.
@@ -29,8 +28,13 @@ export const noteRoutes: MockRoute[] = [
       const { sermonId } = params;
       const noteText = text(field(body, "text"));
       const atSeconds = field(body, "atSeconds");
+      const doc = field(body, "doc");
       if (!sermons.some((sermon) => sermon.id === sermonId)) return fail(404, "not_found");
-      if (!noteText || noteText.length > NOTE_MAX_LENGTH) return fail(400, "bad_request", `A note needs 1–${NOTE_MAX_LENGTH} characters.`);
+      // The limit counts characters, not the line breaks between paragraphs.
+      if (!noteText || noteText.replace(/\n/g, "").length > NOTE_MAX_LENGTH) {
+        return fail(400, "bad_request", `A note needs 1–${NOTE_MAX_LENGTH} characters.`);
+      }
+      if (doc !== undefined && !isNoteDoc(doc)) return fail(400, "bad_request", "doc must be a note document.");
       if (typeof atSeconds !== "number" || atSeconds < 0) return fail(400, "bad_request", "atSeconds must be a non-negative number.");
 
       const notes = await db.notes.list(userId);
@@ -41,6 +45,7 @@ export const noteRoutes: MockRoute[] = [
         sermonId,
         atSeconds: Math.round(atSeconds),
         text: noteText,
+        ...(isNoteDoc(doc) && { doc }),
         createdAt: existing?.createdAt ?? timestamp,
         updatedAt: timestamp,
       };

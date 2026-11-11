@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "vitest";
+import { NOTE_MAX_LENGTH } from "@/features/notes/lib/noteDoc";
 import { records } from "./records";
 import { handleMockRequest, type IncomingMockRequest } from "./router";
 import { DEMO_ACCOUNT } from "./demoAccount";
@@ -128,6 +129,27 @@ describe("mock notes, settings and export", () => {
 
     await call("DELETE", "/notes/arise-and-shine");
     expect((await call("GET", "/notes/arise-and-shine")).status).toBe(404);
+  });
+
+  it("stores a note's formatting as a doc, and turns away anything that isn't one", async () => {
+    await signInDemo();
+    const doc = {
+      type: "doc",
+      content: [
+        { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Morning" }] },
+        { type: "paragraph", content: [{ type: "text", text: "Pray first", marks: [{ type: "bold" }] }] },
+      ],
+    };
+    const saved = await call("PUT", "/notes/living-by-faith", { body: { atSeconds: 60, text: "Morning\nPray first", doc } });
+    expect(saved.data).toMatchObject({ text: "Morning\nPray first", doc });
+
+    const bad = (body: object) => call("PUT", "/notes/living-by-faith", { body: { atSeconds: 60, text: "x", ...body } });
+    expect((await bad({ doc: "<p>html</p>" })).status).toBe(400);
+    expect((await bad({ doc: { type: "paragraph" } })).status).toBe(400);
+    // The limit counts characters, not the breaks between paragraphs.
+    const lines = Array.from({ length: 10 }, () => "a".repeat(NOTE_MAX_LENGTH / 10)).join("\n");
+    expect((await bad({ text: lines })).status).toBe(200);
+    expect((await bad({ text: `${lines}a` })).status).toBe(400);
   });
 
   it("collapses notes stored before the one-per-sermon rule to the latest", async () => {

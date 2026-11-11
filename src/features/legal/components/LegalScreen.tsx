@@ -35,7 +35,7 @@ export default function LegalScreen({ show }: { show: keyof typeof DOCUMENTS }) 
         />
 
         <article className="mt-8">
-          <h2 className="text-3xl font-bold text-foreground">{document.title}</h2>
+          <h2 className="text-2xl font-bold text-foreground md:text-3xl">{document.title}</h2>
           <p className="mt-2 text-sm text-muted">Last updated: {formatLongDate(document.lastUpdated)}</p>
 
           {/* {document.status === "draft" && (

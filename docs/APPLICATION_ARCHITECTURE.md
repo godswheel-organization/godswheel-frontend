@@ -83,7 +83,7 @@ godswheel-frontend/
     │   ├── sermons/                    # sermonsApi, Browse screen, filter sheet, list rows, URL ⇄ filter helpers, mocks
     │   ├── player/                     # player slice, PlaybackEngine (audio or simulated clock), mini + full player
     │   ├── library/                    # saved sermons + listening history (libraryApi), Library screens
-    │   ├── notes/                      # notesApi + the "Add a note" sheet
+    │   ├── notes/                      # notesApi + the note sheet (Tiptap editor, autosave)
     │   ├── bible/                      # bibleApi + the Bible sheet; KJV mock text
     │   ├── settings/                   # settingsApi + the Settings screen
     │   ├── reports/                    # reportsApi, report schema, Report an issue screen (guests allowed)
@@ -220,6 +220,21 @@ in IndexedDB (database `godswheel-mock-api`). It is switched by `NEXT_PUBLIC_USE
   pause, finish and every 15 seconds; that feeds Continue listening and Recently played.
 - Guests can listen; saving, sharing and notes open the app-wide account prompt
   (`dispatch(openAccountPrompt("save" | "share" | "note"))`).
+
+### Notes
+
+- **One note per sermon**, at `/notes/:sermonId` (`GET`, `PUT` to create or replace, `DELETE`). A `404` from
+  `GET` means "no note yet" and reaches components as `null`.
+- **Written like a Medium draft** (`features/notes/components/NoteSheet.tsx`). The sheet opens straight onto the
+  note, with no Save, Edit or Add steps. Selecting text shows a format toolbar (bold, italic, heading,
+  subheading, quote). Markdown shortcuts work too (`## `, `### `, `> `, `- `, `1. `, `**bold**`). Copy and Delete
+  sit in a ⋯ menu.
+- **Autosave:** `hooks/useNoteAutosave.ts` saves once typing pauses for a second, flushes on close, and runs
+  saves one at a time so they land in order. Erasing everything removes the note.
+- **Stored as JSON, never HTML.** A note sends `doc` (the editor's ProseMirror JSON) and `text` (plain text, for
+  previews, search and the export). The editor's schema is `lib/noteEditorExtensions.ts`. A doc it can't read,
+  or a note from before formatting existed, opens from its `text`. The 5,000-character limit counts the text
+  only, not the formatting.
 
 ### Sermon browsing
 

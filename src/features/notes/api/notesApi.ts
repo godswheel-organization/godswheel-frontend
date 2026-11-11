@@ -22,9 +22,9 @@ export const notesApi = createApi({
       providesTags: (_result, _error, sermonId) => [{ type: API_TAGS.Notes, id: sermonId }],
     }),
 
-    // Creates the sermon's note, or replaces its text.
+    // Creates the sermon's note, or replaces it. The note sheet calls this as you type (autosave).
     saveNote: builder.mutation<SermonNote, SaveNoteRequest>({
-      query: ({ sermonId, atSeconds, text }) => ({ url: noteUrl(sermonId), method: "PUT", body: { atSeconds, text } }),
+      query: ({ sermonId, ...body }) => ({ url: noteUrl(sermonId), method: "PUT", body }),
       // Show the saved note straight away instead of waiting for a refetch.
       async onQueryStarted({ sermonId }, { dispatch, queryFulfilled }) {
         const { data: note } = await queryFulfilled;

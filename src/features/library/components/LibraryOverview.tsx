@@ -26,7 +26,7 @@ export default function LibraryOverview() {
 
   return (
     <Container className="py-6 md:py-10">
-      <h1 className="text-3xl font-bold text-foreground">Your library</h1>
+      <h1 className="text-2xl font-bold text-foreground md:text-3xl">Your library</h1>
 
       {sessionLoading ? (
         <LibraryOverviewSkeleton />
