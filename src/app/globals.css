@@ -3,9 +3,25 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* GodsWheel palette — the "Color Style for GodsWheel" swatches from the design file, in its order.
+   The single source of truth: every token in the @theme below points here, so change a hex here and it
+   changes everywhere. Each is also a utility of its own (bg-ink, text-cream, border-coral…).
+   `static` always emits them on :root, so var(--color-coral) works in plain CSS even before a class uses it. */
+@theme static {
+  --color-ink: #0f1220;
+  --color-navy: #1b2036;
+  --color-dusk: #394166;
+  --color-cream: #f5f3ed;
+  --color-mist: #b8bccb;
+  --color-sunrise: #f28c4b;
+  --color-cocoa: #2a1406;
+  --color-coral: #ff797a;
+}
+
 @theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-lora);
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
@@ -37,42 +53,32 @@
   --color-current: currentColor;
   --color-transparent: transparent;
   --color-white: #ffffff;
-  --color-black: #161312;
+  --color-black: var(--color-ink);
 
-  /* Semantic surface tokens — the app is dark-only, so these are what pages should reach for first. */
-  --color-background: #161312;
-  --color-surface: #211f1d;
-  --color-surface-raised: #2d2b29;
-  --color-border: #393533;
-  --color-foreground: #f7f1eb;
-  --color-muted: #a89c93;
+  /* Semantic tokens — the app is dark-only, so these are what pages should reach for first. */
+  --color-background: var(--color-ink);
+  --color-surface: var(--color-navy);
+  --color-surface-raised: #242a45; /* between navy and dusk; not a design swatch */
+  --color-border: var(--color-dusk);
+  --color-foreground: var(--color-cream);
+  --color-muted: var(--color-mist);
+  --color-on-brand: var(--color-cocoa); /* text on brand-500 fills */
+  --color-danger: var(--color-coral); /* form errors, destructive actions */
 
-  /* Primary brand color (ember): #EA6134 — buttons, tags, active icons */
-  --color-brand-25: #fff8f5;
-  --color-brand-50: #fef1eb;
-  --color-brand-100: #fde0d3;
-  --color-brand-200: #fbc2a8;
-  --color-brand-300: #f89a74;
-  --color-brand-400: #ef7034;
-  --color-brand-500: #ea6134;
-  --color-brand-600: #d14d22;
-  --color-brand-700: #ad3d1b;
-  --color-brand-800: #8a3519;
-  --color-brand-900: #702d14;
-  --color-brand-950: #3d2218;
-
-  /* Logo gold: #EC991C (wheel ring); gold-100 is the dove's cream; gold-400 ends the brand gradient */
-  --color-gold-50: #fdf8ea;
-  --color-gold-100: #f7eab9;
-  --color-gold-200: #f3d88a;
-  --color-gold-300: #efc15a;
-  --color-gold-400: #fa9631;
-  --color-gold-500: #ec991c;
-  --color-gold-600: #cc7c12;
-  --color-gold-700: #a35f10;
-  --color-gold-800: #7d4812;
-  --color-gold-900: #5c3610;
-  --color-gold-950: #3a220a;
+  /* Brand scale built around sunrise (500) and cocoa (950): primary buttons, eyebrows, active icons.
+     brand-950 is the dark text that sits on brand-500 buttons. */
+  --color-brand-25: #fff9f5;
+  --color-brand-50: #fef3ec;
+  --color-brand-100: #fde3d2;
+  --color-brand-200: #fbc8a7;
+  --color-brand-300: #f8aa79;
+  --color-brand-400: #f59a62;
+  --color-brand-500: var(--color-sunrise);
+  --color-brand-600: #de7536;
+  --color-brand-700: #b95c2a;
+  --color-brand-800: #8f4722;
+  --color-brand-900: #5c3217;
+  --color-brand-950: var(--color-cocoa);
 
   --color-blue-light-25: #f5fbff;
   --color-blue-light-50: #f0f9ff;
@@ -87,20 +93,20 @@
   --color-blue-light-900: #0b4a6f;
   --color-blue-light-950: #062c41;
 
-  /* Warm neutrals: 50 = foreground, 400 = muted, 700 = border, 800 = surface-raised, 900 = surface, 950 = background */
-  --color-gray-25: #fbf8f5;
-  --color-gray-50: #f7f1eb;
-  --color-gray-100: #ede6df;
-  --color-gray-200: #dcd4cc;
-  --color-gray-300: #c4b9b0;
-  --color-gray-400: #a89c93;
-  --color-gray-500: #857a72;
-  --color-gray-600: #635f5c;
-  --color-gray-700: #393533;
-  --color-gray-800: #2d2b29;
-  --color-gray-900: #211f1d;
-  --color-gray-950: #161312;
-  --color-gray-dark: #1c1917;
+  /* Navy neutrals: the palette swatches at 50/300/700/900/950, in-between steps interpolated. */
+  --color-gray-25: #faf9f6;
+  --color-gray-50: var(--color-cream);
+  --color-gray-100: #e6e7ee;
+  --color-gray-200: #cfd2de;
+  --color-gray-300: var(--color-mist);
+  --color-gray-400: #8d91a0;
+  --color-gray-500: #6b7086;
+  --color-gray-600: #4f5679;
+  --color-gray-700: var(--color-dusk);
+  --color-gray-800: var(--color-surface-raised);
+  --color-gray-900: var(--color-navy);
+  --color-gray-950: var(--color-ink);
+  --color-gray-dark: #141829;
 
   --color-success-25: #f6fef9;
   --color-success-50: #ecfdf3;
@@ -159,6 +165,38 @@
   --z-index-9999: 9999;
   --z-index-99999: 99999;
   --z-index-999999: 999999;
+
+  /* Sheet/dialog entrances (used with motion-safe:, so reduced-motion users get none). */
+  --animate-sheet-up: sheet-up 260ms cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-drawer-in: drawer-in 240ms cubic-bezier(0.32, 0.72, 0, 1);
+
+  @keyframes sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes drawer-in {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 /* Restores Tailwind v3's default border color so the copied components render unmodified. */
@@ -179,15 +217,9 @@
   }
 }
 
-/* The ember-to-gold gradient from the quote card and the "Wheel" wordmark. */
-@utility bg-brand-gradient {
-  background-image: linear-gradient(90deg, var(--color-brand-400), var(--color-gold-400));
-}
-
-@utility text-brand-gradient {
-  background-image: linear-gradient(90deg, var(--color-brand-400), var(--color-gold-400));
-  background-clip: text;
-  color: transparent;
+/* Soft sunrise glow used behind hero and call-to-action panels. */
+@utility bg-brand-glow {
+  background-image: radial-gradient(60% 60% at 50% 0%, color-mix(in oklab, var(--color-brand-500) 28%, transparent), transparent 70%);
 }
 
 @utility custom-scrollbar {
@@ -202,10 +234,104 @@
   }
 }
 
+/* The player's seek bar: a thin track (filled inline by SeekBar) with a round orange thumb. */
+@utility range-seek {
+  appearance: none;
+  height: 0.25rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background: var(--color-brand-500);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-brand-500) 25%, transparent);
+  }
+  &::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--color-brand-500);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 6px;
+  }
+}
+
 @utility no-scrollbar {
   &::-webkit-scrollbar {
     display: none;
   }
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* A note in the note editor, set like a Medium story: serif body, sans headings, a ruled quote. */
+@utility note-prose {
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--color-foreground);
+  overflow-wrap: anywhere;
+  & > * + * {
+    margin-top: 0.85em;
+  }
+  & h2,
+  & h3 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  & h2 {
+    font-size: 1.5rem;
+    margin-top: 1.1em;
+  }
+  & h3 {
+    font-size: 1.2rem;
+    margin-top: 1em;
+  }
+  & > :first-child {
+    margin-top: 0;
+  }
+  & blockquote {
+    border-left: 3px solid var(--color-brand-500);
+    padding-left: 1rem;
+    font-style: italic;
+    color: var(--color-mist);
+  }
+  & ul,
+  & ol {
+    padding-left: 1.4rem;
+  }
+  & ul {
+    list-style: disc;
+  }
+  & ol {
+    list-style: decimal;
+  }
+  & li + li {
+    margin-top: 0.3em;
+  }
+  & li::marker {
+    color: var(--color-muted);
+  }
+  & strong {
+    font-weight: 700;
+  }
+  /* The placeholder, shown in the empty first line. */
+  & p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    color: var(--color-muted);
+    opacity: 0.7;
+  }
+  & ::selection {
+    background: color-mix(in oklab, var(--color-brand-500) 35%, transparent);
+  }
 }

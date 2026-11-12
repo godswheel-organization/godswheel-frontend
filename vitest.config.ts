@@ -19,6 +19,8 @@ export default defineConfig({
       NEXT_PUBLIC_API_BASE_URL: "http://localhost:8081/v1",
       NEXT_PUBLIC_SESSION_COOKIE_NAME: "session",
       NEXT_PUBLIC_ENABLE_PWA: "false",
+      // Mock-API tests build their own in-memory store; nothing else should reach for IndexedDB (jsdom has none).
+      NEXT_PUBLIC_USE_MOCK_API: "false",
     },
   },
 });

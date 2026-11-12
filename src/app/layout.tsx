@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Lora } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -13,14 +13,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Display serif for headlines (`font-serif`).
+const lora = Lora({
+  variable: "--font-lora",
+  subsets: ["latin"],
+  // Italic for quoted scripture (the sidebar verse card).
+  style: ["normal", "italic"],
+});
+
 export const metadata: Metadata = {
-  title: "Godswheel",
-  description: "Godswheel web app.",
+  title: { default: "GodsWheel", template: "%s · GodsWheel" },
+  description: "Find sermons by speaker, category or scripture.",
+  manifest: "/manifest.webmanifest",
 };
 
 // Matches --color-background, so the browser/OS chrome blends into the app.
 export const viewport: Viewport = {
-  themeColor: "#161312",
+  themeColor: "#0f1220",
   colorScheme: "dark",
 };
 
@@ -32,9 +41,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   // before React loads; suppressHydrationWarning ignores those two elements' attributes only, not their children.
   // The brand is dark-only, so `dark` is always on and every `dark:` variant applies.
   return (
+    // data-scroll-behavior: lets Next turn smooth scrolling off during route changes (it only smooths in-page anchors).
     <html
       lang="en"
-      className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
+      className={`dark ${geistSans.variable} ${geistMono.variable} ${lora.variable} h-full scroll-smooth antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>

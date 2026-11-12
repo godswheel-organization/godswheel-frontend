@@ -39,13 +39,21 @@ function withUnauthorizedEvent(rawQuery: AppBaseQuery): AppBaseQuery {
   };
 }
 
-// Every feature's api slice uses this: credentials (httpOnly session cookie) and the CSRF header.
+// The real backend: credentials (httpOnly session cookie) and the CSRF header.
+const httpBaseQuery: AppBaseQuery = fetchBaseQuery({
+  baseUrl: env.NEXT_PUBLIC_API_BASE_URL,
+  credentials: "include",
+  prepareHeaders: csrfHeaders,
+});
+
+// The in-browser mock backend (dummy data until the real one exists). Loaded on first use, so a build
+// with NEXT_PUBLIC_USE_MOCK_API=false never downloads the mock or its data.
+const mockBaseQuery: AppBaseQuery = async (args, api, extraOptions) =>
+  (await import("./mock/mockBaseQuery")).mockBaseQuery(args, api, extraOptions);
+
+// Every feature's api slice uses this; NEXT_PUBLIC_USE_MOCK_API picks which backend answers.
 export const baseQuery: AppBaseQuery = withUnauthorizedEvent(
-  fetchBaseQuery({
-    baseUrl: env.NEXT_PUBLIC_API_BASE_URL,
-    credentials: "include",
-    prepareHeaders: csrfHeaders,
-  }),
+  env.NEXT_PUBLIC_USE_MOCK_API ? mockBaseQuery : httpBaseQuery,
 );
 
 function getCsrfTokenFromCookie(): string | null {
