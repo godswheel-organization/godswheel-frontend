@@ -12,7 +12,8 @@ import { env } from "@/lib/env";
 const PROTECTED_PREFIXES: string[] = [];
 const SIGN_IN_PATH = "/sign-in";
 
-const API_ORIGIN = new URL(env.NEXT_PUBLIC_API_BASE_URL).origin;
+// Only set once the real backend is in use; until then the app talks to its in-browser mock only.
+const API_ORIGIN = env.NEXT_PUBLIC_API_BASE_URL ? new URL(env.NEXT_PUBLIC_API_BASE_URL).origin : "";
 
 function buildContentSecurityPolicy(nonce: string) {
   // The dev server's Fast Refresh relies on eval() for accurate stack traces —
@@ -32,7 +33,7 @@ function buildContentSecurityPolicy(nonce: string) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "font-src 'self'",
-    `connect-src 'self' ${API_ORIGIN}`,
+    `connect-src 'self'${API_ORIGIN ? ` ${API_ORIGIN}` : ""}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
