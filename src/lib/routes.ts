@@ -12,6 +12,7 @@ export const ROUTES = {
   librarySaved: "/library/saved",
   libraryHistory: "/library/history",
   settings: "/settings",
+  changePassword: "/settings/password",
   signIn: "/sign-in",
   signUp: "/sign-up",
   forgotPassword: "/forgot-password",

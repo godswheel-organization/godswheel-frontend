@@ -25,3 +25,16 @@ export const forgotPasswordSchema = z.object({
 });
 
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+
+export const changePasswordSchema = z
+  .object({
+    // Only checked for being filled in here; the server checks it's right.
+    currentPassword: z.string().min(1, "Enter your current password"),
+    newPassword: passwordSchema,
+  })
+  .refine((values) => !values.currentPassword || values.newPassword !== values.currentPassword, {
+    path: ["newPassword"],
+    message: "Choose a password you haven't used before",
+  });
+
+export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;

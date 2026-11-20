@@ -37,6 +37,26 @@ describe("mock auth", () => {
     expect((await call("GET", "/auth/session")).status).toBe(401);
   });
 
+  it("changes the password: checks the current one and turns down any used before", async () => {
+    const change = (currentPassword: string, newPassword: string) =>
+      call("POST", "/auth/password/change", { body: { currentPassword, newPassword } });
+
+    expect((await change(DEMO_ACCOUNT.password, "new-password-1")).status).toBe(401); // signed out
+    await signInDemo();
+
+    expect(await change("not-my-password", "new-password-1")).toMatchObject({ status: 403, data: { error: "incorrect_password" } });
+    expect(await change(DEMO_ACCOUNT.password, DEMO_ACCOUNT.password)).toMatchObject({ status: 422, data: { error: "password_reused" } });
+    expect((await change(DEMO_ACCOUNT.password, "short")).status).toBe(400);
+
+    expect((await change(DEMO_ACCOUNT.password, "new-password-1")).status).toBe(204);
+    // Back to the old one: used before.
+    expect(await change("new-password-1", DEMO_ACCOUNT.password)).toMatchObject({ status: 422, data: { error: "password_reused" } });
+
+    await call("POST", "/auth/logout");
+    expect((await signInDemo()).status).toBe(401);
+    expect((await call("POST", "/auth/login", { body: { email: DEMO_ACCOUNT.email, password: "new-password-1" } })).status).toBe(204);
+  });
+
   it("gives one answer for a wrong password and an unknown email", async () => {
     const wrongPassword = await call("POST", "/auth/login", { body: { email: DEMO_ACCOUNT.email, password: "nope-nope" } });
     const unknownEmail = await call("POST", "/auth/login", { body: { email: "nobody@example.com", password: "password123" } });

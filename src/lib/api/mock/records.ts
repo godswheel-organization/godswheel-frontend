@@ -12,6 +12,8 @@ export interface StoredUser {
   // Lower-cased, so sign-in is case-insensitive.
   email: string;
   passwordHash: string;
+  // Hashes of earlier passwords, newest first, so a change can turn down one used before.
+  previousPasswordHashes?: string[];
   createdAt: string;
 }
 

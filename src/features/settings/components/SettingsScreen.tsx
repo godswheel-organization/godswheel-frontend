@@ -51,7 +51,7 @@ export default function SettingsScreen() {
             {isSignedIn && <PrivacySection />}
 
             <Group title="Account and about">
-              {isSignedIn && <ListRow label="Change password" href={ROUTES.forgotPassword} />}
+              {isSignedIn && <ListRow label="Change password" href={ROUTES.changePassword} />}
               <ListRow label="About and standards" href={ROUTES.about} />
               <ListRow label="Report an issue" href={ROUTES.report} />
               <ListRow label="Privacy notice and Terms" href={ROUTES.privacy} />
