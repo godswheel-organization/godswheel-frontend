@@ -8,3 +8,7 @@ import type { Sermon } from "../types";
 export const getSermon = cache(async (id: string): Promise<Sermon | null> => {
   return sermons.find((sermon) => sermon.id === id) ?? null;
 });
+
+// Every published sermon, for the sitemap.
+// TODO(backend): replace with a fetch of the sermon list (ids and publish dates are all the sitemap needs).
+export const getAllSermons = cache(async (): Promise<Sermon[]> => sermons);

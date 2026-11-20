@@ -5,8 +5,13 @@ import TopicChips from "@/features/sermons/components/TopicChips";
 import { featuredSermons, recommendedSermons } from "@/features/sermons/mocks/sermons";
 import { ROUTES } from "@/lib/routes";
 import Container from "@/shared/ui/container/Container";
+import { pageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = { title: "Home" };
+export const metadata: Metadata = pageMetadata({
+  title: "Home",
+  description: "Pick up where you left off, and find sermons chosen for your listening.",
+  path: ROUTES.home,
+});
 
 export default function HomePage() {
   return (

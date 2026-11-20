@@ -236,6 +236,23 @@ in IndexedDB (database `godswheel-mock-api`). It is switched by `NEXT_PUBLIC_USE
   or a note from before formatting existed, opens from its `text`. The 5,000-character limit counts the text
   only, not the formatting.
 
+### SEO and link previews
+
+- **Every page's metadata goes through `lib/seo/metadata.ts` (`pageMetadata`)**: title, description, canonical
+  URL and preview text. Account pages, search results, sign-in and report are `noIndex: true`.
+- **The site address** comes from `lib/seo/site.ts`: `NEXT_PUBLIC_APP_URL`, else Vercel's production domain,
+  else the deployment URL. Only the production deployment is indexable; previews and local servers send
+  `noindex` and a `Disallow: /` robots.txt.
+- **`app/sitemap.ts`** lists the landing page, Browse, each category, every sermon, About and the legal pages.
+  **`app/robots.ts`** keeps crawlers out of `/library` and `/settings`.
+- **Category pages are pages in their own right:** `/sermons?topic=faith` is titled "Faith sermons" and is its own
+  canonical URL. Any other filter combination is `noindex` and points back at `/sermons`.
+- **Share images** are drawn with `next/og` (`lib/seo/ogImage.tsx`): `app/opengraph-image.tsx` for the site,
+  `sermons/[id]/opengraph-image.tsx` per sermon. A route with its own image passes `ownImage: true`, because
+  `openGraph.images` set in config would replace the file's image.
+- **Structured data (JSON-LD):** WebSite (with search) and Organization on the landing page, plus an AudioObject
+  and breadcrumbs on each sermon (`features/sermons/lib/sermonSeo.ts`).
+
 ### Sermon browsing
 
 - **The URL is the source of truth for Browse filters** (`?q=&topic=&speaker=&book=&sort=`), translated only by

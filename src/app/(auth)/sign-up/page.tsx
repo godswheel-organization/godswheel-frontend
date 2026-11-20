@@ -5,8 +5,9 @@ import SignUpForm from "@/features/auth/components/sign-up/SignUpForm";
 import { ROUTES } from "@/lib/routes";
 import Logo from "@/shared/ui/brand/Logo";
 import BackButton from "@/shared/ui/button/BackButton";
+import { pageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = { title: "Create account" };
+export const metadata: Metadata = pageMetadata({ title: "Create account", noIndex: true });
 
 export default function SignUpPage() {
   return (

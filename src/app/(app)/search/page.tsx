@@ -3,8 +3,9 @@ import type { Metadata } from "next";
 import SearchSermons from "@/features/sermons/components/SearchSermons";
 import SermonListSkeleton from "@/features/sermons/components/SermonListSkeleton";
 import Container from "@/shared/ui/container/Container";
+import { pageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = { title: "Search" };
+export const metadata: Metadata = pageMetadata({ title: "Search", noIndex: true });
 
 export default function SearchPage() {
   return (

@@ -1,6 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Lora } from "next/font/google";
 import { headers } from "next/headers";
+import { BASE_OPEN_GRAPH } from "@/lib/seo/metadata";
+import {
+  IS_INDEXABLE_DEPLOYMENT,
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  SITE_TAGLINE,
+  SITE_URL,
+} from "@/lib/seo/site";
 import LaunchSplash from "@/shared/pwa/launch-splash/LaunchSplash";
 import { SPLASH_SCRIPT } from "@/shared/pwa/launch-splash/splashConfig";
 import { Providers } from "./providers";
@@ -24,9 +33,25 @@ const lora = Lora({
   style: ["normal", "italic"],
 });
 
+// Site-wide defaults. Each page sets its own title, description and canonical URL via lib/seo/metadata.ts;
+// the share image comes from ./opengraph-image.tsx (sermons draw their own).
 export const metadata: Metadata = {
-  title: { default: "GodsWheel", template: "%s · GodsWheel" },
-  description: "Find sermons by speaker, category or scripture.",
+  metadataBase: new URL(SITE_URL),
+  title: { default: `${SITE_NAME} · ${SITE_TAGLINE}`, template: `%s · ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: SITE_KEYWORDS,
+  category: "religion",
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  // Only the production deployment asks to be indexed (see lib/seo/site.ts). Pages can opt out further.
+  robots: IS_INDEXABLE_DEPLOYMENT
+    ? { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } }
+    : { index: false, follow: false },
+  openGraph: { ...BASE_OPEN_GRAPH, title: `${SITE_NAME} · ${SITE_TAGLINE}`, description: SITE_DESCRIPTION },
+  twitter: { card: "summary_large_image", title: `${SITE_NAME} · ${SITE_TAGLINE}`, description: SITE_DESCRIPTION },
+  // Stops iOS turning numbers (verse references, durations) into phone links.
+  formatDetection: { telephone: false },
   manifest: "/manifest.webmanifest",
   // Lets iPhones open the installed app full-screen, like Android does from the manifest.
   appleWebApp: { capable: true, title: "GodsWheel", statusBarStyle: "black-translucent" },

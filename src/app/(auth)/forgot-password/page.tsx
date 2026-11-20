@@ -3,8 +3,9 @@ import ForgotPasswordForm from "@/features/auth/components/forgot-password/Forgo
 import { ROUTES } from "@/lib/routes";
 import Logo from "@/shared/ui/brand/Logo";
 import BackButton from "@/shared/ui/button/BackButton";
+import { pageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = { title: "Reset password" };
+export const metadata: Metadata = pageMetadata({ title: "Reset password", noIndex: true });
 
 export default function ForgotPasswordPage() {
   return (

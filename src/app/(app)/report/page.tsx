@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import ReportIssueScreen from "@/features/reports/components/ReportIssueScreen";
 import { getSermon } from "@/features/sermons/server/getSermon";
+import { pageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = { title: "Report an issue" };
+export const metadata: Metadata = pageMetadata({ title: "Report an issue", noIndex: true });
 
 // /report?sermon=<id> reports that sermon; plain /report is a general report or message.
 export default async function ReportPage({ searchParams }: PageProps<"/report">) {
