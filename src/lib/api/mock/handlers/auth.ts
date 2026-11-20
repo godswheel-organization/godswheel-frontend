@@ -3,6 +3,9 @@ import { fail, field, noContent, ok, text, type MockRoute } from "../http";
 import { hashPassword } from "../password";
 import { DEFAULT_SETTINGS } from "../records";
 
+// How many earlier passwords a new one is checked against.
+const PASSWORD_HISTORY = 5;
+
 const toSession = (user: { id: string; firstName: string; lastName: string; email: string }): AuthSession => ({
   userId: user.id,
   firstName: user.firstName,
@@ -67,6 +70,32 @@ export const authRoutes: MockRoute[] = [
     path: "/auth/logout",
     async handle(_request, { db }) {
       await db.session.end();
+      return noContent();
+    },
+  },
+  {
+    method: "POST",
+    path: "/auth/password/change",
+    auth: true,
+    async handle({ body }, { db, userId }) {
+      const currentPassword = field(body, "currentPassword");
+      const newPassword = field(body, "newPassword");
+      if (typeof currentPassword !== "string" || typeof newPassword !== "string" || newPassword.length < 8 || newPassword.length > 128) {
+        return fail(400, "bad_request", "The current password and an 8–128 character new password are required.");
+      }
+
+      const users = await db.users.all();
+      const user = users.find((candidate) => candidate.id === userId);
+      if (!user) return fail(401, "unauthenticated");
+      // 403, not 401: the session is fine, only the password typed is wrong (a 401 would sign the user out).
+      if (user.passwordHash !== hashPassword(currentPassword)) return fail(403, "incorrect_password");
+
+      const newHash = hashPassword(newPassword);
+      const used = [user.passwordHash, ...(user.previousPasswordHashes ?? [])];
+      if (used.includes(newHash)) return fail(422, "password_reused");
+
+      const updated = { ...user, passwordHash: newHash, previousPasswordHashes: used.slice(0, PASSWORD_HISTORY) };
+      await db.users.save(users.map((candidate) => (candidate.id === userId ? updated : candidate)));
       return noContent();
     },
   },

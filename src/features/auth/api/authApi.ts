@@ -1,7 +1,7 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "@/lib/api/baseQuery";
 import { API_TAGS } from "@/lib/api/apiTags";
-import type { AuthSession, PasswordResetRequest, SignInRequest, SignUpRequest } from "../types";
+import type { AuthSession, ChangePasswordRequest, PasswordResetRequest, SignInRequest, SignUpRequest } from "../types";
 
 // TODO(backend): endpoint paths are placeholders until the Godswheel API spec is available.
 export const authApi = createApi({
@@ -25,6 +25,12 @@ export const authApi = createApi({
       query: (body) => ({ url: "/auth/password/forgot", method: "POST", body }),
     }),
 
+    // Signed-in users only. Fails with `incorrect_password` (current password wrong) or
+    // `password_reused` (the new one has been used on this account before); see changePasswordErrors.
+    changePassword: builder.mutation<void, ChangePasswordRequest>({
+      query: (body) => ({ url: "/auth/password/change", method: "POST", body }),
+    }),
+
     getSession: builder.query<AuthSession, void>({
       query: () => "/auth/session",
       providesTags: [API_TAGS.Auth],
@@ -41,6 +47,7 @@ export const {
   useSignInMutation,
   useSignUpMutation,
   useRequestPasswordResetMutation,
+  useChangePasswordMutation,
   useGetSessionQuery,
   useSignOutMutation,
 } = authApi;

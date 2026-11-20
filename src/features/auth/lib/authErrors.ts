@@ -24,3 +24,17 @@ export function passwordResetErrorMessage(error: unknown): string | null {
   if (status === 400) return "Enter a valid email address.";
   return "Something went wrong on our side. Please try again.";
 }
+
+// A failed password change, pointed at the field the user needs to fix (or the whole form).
+export function changePasswordErrorMessage(error: unknown): {
+  field?: "currentPassword" | "newPassword";
+  message: string;
+} {
+  const { status, code } = toApiError(error);
+
+  if (code === "incorrect_password") return { field: "currentPassword", message: "That's not your current password" };
+  if (code === "password_reused") return { field: "newPassword", message: "Choose a password you haven't used before" };
+  if (code === "network_error") return { message: "We couldn't reach GodsWheel. Check your connection and try again." };
+  if (status === 429) return { message: "Too many attempts. Wait a few minutes, then try again." };
+  return { message: "Something went wrong on our side. Please try again." };
+}
