@@ -7,8 +7,9 @@ import { env } from "@/lib/env";
 import { ROUTES } from "@/lib/routes";
 import Logo from "@/shared/ui/brand/Logo";
 import BackButton from "@/shared/ui/button/BackButton";
+import { pageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = pageMetadata({ title: "Sign in", noIndex: true });
 
 const footerLinkClasses = "text-foreground underline underline-offset-4 transition hover:text-brand-300";
 
