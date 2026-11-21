@@ -2,7 +2,6 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { Menu, X } from "lucide-react";
-import { ROUTES } from "@/lib/routes";
 import Logo from "@/shared/ui/brand/Logo";
 import { useReturnFocus } from "@/shared/ui/modal/useReturnFocus";
 import { useAppNav } from "./AppNavProvider";
@@ -52,7 +51,7 @@ export default function NavDrawer(props: NavPanelProps) {
             >
               <X className="size-6" strokeWidth={1.75} aria-hidden />
             </Dialog.Close>
-            <Logo href={ROUTES.home} />
+            <Logo />
           </div>
           <NavPanel {...props} />
         </Dialog.Content>

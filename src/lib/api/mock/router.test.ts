@@ -38,15 +38,15 @@ describe("mock auth", () => {
   });
 
   it("changes the password: checks the current one and turns down any used before", async () => {
-    const change = (currentPassword: string, newPassword: string) =>
-      call("POST", "/auth/password/change", { body: { currentPassword, newPassword } });
+    const change = (current_password: string, new_password: string) =>
+      call("PUT", "/auth/change-password", { body: { current_password, new_password } });
 
     expect((await change(DEMO_ACCOUNT.password, "new-password-1")).status).toBe(401); // signed out
     await signInDemo();
 
     expect(await change("not-my-password", "new-password-1")).toMatchObject({ status: 403, data: { error: "incorrect_password" } });
     expect(await change(DEMO_ACCOUNT.password, DEMO_ACCOUNT.password)).toMatchObject({ status: 422, data: { error: "password_reused" } });
-    expect((await change(DEMO_ACCOUNT.password, "short")).status).toBe(400);
+    expect((await change(DEMO_ACCOUNT.password, "short")).status).toBe(422);
 
     expect((await change(DEMO_ACCOUNT.password, "new-password-1")).status).toBe(204);
     // Back to the old one: used before.
@@ -68,15 +68,30 @@ describe("mock auth", () => {
     expect((await call("POST", "/auth/login", { body: { ...DEMO_ACCOUNT, email: " ADA.Okafor@Example.com " } })).status).toBe(204);
   });
 
-  it("registers a new account, signs it in, and refuses the same email twice", async () => {
-    const body = { firstName: "Tunde", lastName: "Bello", email: "tunde@example.com", password: "long-enough", termsAccepted: true };
+  it("signs up like the live API: an unverified account, no session, one account per email", async () => {
+    const body = { full_name: "Tunde Bello", email: "tunde@example.com", password: "long-enough", accepted_terms: true };
 
-    expect((await call("POST", "/auth/register", { body })).status).toBe(201);
-    expect((await call("GET", "/auth/session")).data).toMatchObject({ firstName: "Tunde", email: "tunde@example.com" });
-    expect((await call("POST", "/auth/register", { body: { ...body, email: "TUNDE@example.com" } })).status).toBe(409);
+    const created = await call("POST", "/auth/signup", { body });
+    expect(created).toMatchObject({
+      status: 201,
+      data: { success: true, data: { user: { fullName: "Tunde Bello", email: "tunde@example.com", emailVerified: false } } },
+    });
+    expect((await call("GET", "/auth/session")).status).toBe(401);
 
-    await call("POST", "/auth/logout");
-    expect((await call("POST", "/auth/login", { body: { email: "tunde@example.com", password: "long-enough" } })).status).toBe(204);
+    expect(await call("POST", "/auth/signup", { body: { ...body, email: "TUNDE@example.com" } })).toMatchObject({
+      status: 422,
+      data: { success: false, error: { code: "validation_error", details: { email: ["has already been taken"] } } },
+    });
+    expect(
+      (await call("POST", "/auth/signup", { body: { ...body, email: "new@example.com", full_name: "T", accepted_terms: false } })).data,
+    ).toMatchObject({ error: { details: { fullName: expect.any(Array), acceptedTerms: ["must be accepted"] } } });
+
+    // Can't sign in until the email is verified.
+    expect(await call("POST", "/auth/login", { body: { email: "tunde@example.com", password: "long-enough" } })).toMatchObject({
+      status: 403,
+      data: { error: "email_not_verified" },
+    });
+    expect((await call("POST", "/auth/resend-verification", { body: { email: "tunde@example.com" } })).status).toBe(200);
   });
 
   it("never stores the password itself", async () => {
@@ -85,7 +100,7 @@ describe("mock auth", () => {
   });
 
   it("accepts any password-reset request, so it can't be used to find accounts", async () => {
-    expect((await call("POST", "/auth/password/forgot", { body: { email: "nobody@example.com" } })).status).toBe(202);
+    expect((await call("POST", "/auth/forgot-password", { body: { email: "nobody@example.com" } })).status).toBe(202);
   });
 });
 

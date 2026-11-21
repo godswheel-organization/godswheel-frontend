@@ -3,7 +3,11 @@ import type { ChangeEvent } from "react";
 
 // Single source of truth per field shape — reused across every feature schema.
 
-export const emailSchema = z.string().email("Enter a valid email address");
+export const emailSchema = z
+  .string()
+  .trim()
+  .max(254, "Email must be 254 characters or fewer")
+  .email("Enter a valid email address");
 
 export const optionalEmailSchema = z
   .string()
@@ -42,7 +46,8 @@ export const personalNameSchema = (fieldName = "Name") =>
 export const passwordSchema = z
   .string()
   .min(8, "Password must be at least 8 characters")
-  .max(128, "Password must be 128 characters or fewer");
+  // The API's limit (bcrypt only reads the first 72 bytes).
+  .max(72, "Password must be 72 characters or fewer");
 
 export const urlSchema = z.string().url("Enter a valid URL");
 

@@ -1,7 +1,13 @@
 import type { AuthSession } from "@/features/auth/types";
-import { fail, field, noContent, ok, text, type MockRoute } from "../http";
+import { fail, field, noContent, ok, text, type MockRoute, type MockResponse } from "../http";
 import { hashPassword } from "../password";
 import { DEFAULT_SETTINGS } from "../records";
+
+// The live API's validation error: 422 { success: false, error: { code, message, details } }.
+const validationError = (details: Record<string, string[]>): MockResponse => ({
+  status: 422,
+  data: { success: false, error: { code: "validation_error", message: "The submitted account details are invalid.", details } },
+});
 
 // How many earlier passwords a new one is checked against.
 const PASSWORD_HISTORY = 5;
@@ -23,39 +29,63 @@ export const authRoutes: MockRoute[] = [
       const user = (await db.users.all()).find((candidate) => candidate.email === email);
       // One answer for "no such user" and "wrong password", as a real backend should give.
       if (!user || user.passwordHash !== hashPassword(password)) return fail(401, "invalid_credentials");
+      // Accounts made through sign-up can't sign in until their email is verified (the demo account is).
+      if (user.emailVerified === false) return fail(403, "email_not_verified");
       await db.session.start(user.id);
       return noContent();
     },
   },
   {
+    // Mirrors the live POST /auth/signup (which the app now calls for real; see LIVE_ENDPOINTS in baseQuery.ts):
+    // an unverified account, no session, and the API's { success, data } / { success, error } envelopes.
     method: "POST",
-    path: "/auth/register",
+    path: "/auth/signup",
     async handle({ body }, { db, now }) {
-      const firstName = text(field(body, "firstName"));
-      const lastName = text(field(body, "lastName"));
+      const fullName = text(field(body, "full_name"));
       const email = text(field(body, "email")).toLowerCase();
       const password = field(body, "password");
-      if (!firstName || !lastName || !email.includes("@") || typeof password !== "string" || password.length < 8) {
-        return fail(400, "bad_request", "First name, last name, a valid email and an 8+ character password are required.");
-      }
-      if (field(body, "termsAccepted") !== true) return fail(400, "bad_request", "The terms must be accepted.");
+      const details: Record<string, string[]> = {};
+      if (fullName.length < 2 || fullName.length > 120) details.fullName = ["should be 2 to 120 character(s)"];
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) details.email = ["has invalid format"];
+      if (typeof password !== "string" || password.length < 8 || password.length > 72) details.password = ["should be 8 to 72 character(s)"];
+      if (field(body, "accepted_terms") !== true) details.acceptedTerms = ["must be accepted"];
 
       const users = await db.users.all();
-      if (users.some((user) => user.email === email)) return fail(409, "email_taken");
+      if (!details.email && users.some((user) => user.email === email)) details.email = ["has already been taken"];
+      if (Object.keys(details).length) return validationError(details);
 
+      const [firstName, ...rest] = fullName.split(/\s+/);
       const user = {
         id: `user_${crypto.randomUUID()}`,
         firstName,
-        lastName,
+        lastName: rest.join(" "),
         email,
-        passwordHash: hashPassword(password),
+        passwordHash: hashPassword(password as string),
+        emailVerified: false,
         createdAt: now().toISOString(),
       };
       await db.users.save([...users, user]);
       await db.settings.save(user.id, DEFAULT_SETTINGS);
-      await db.session.start(user.id);
-      return ok(null, 201);
+      return ok(
+        {
+          success: true,
+          data: {
+            message: "Account created. Check your email to verify your address.",
+            user: { id: user.id, fullName, email, emailVerified: false },
+          },
+        },
+        201
+      );
     },
+  },
+  {
+    // The same answer whether or not an unverified account exists, so it can't be used to find accounts.
+    method: "POST",
+    path: "/auth/resend-verification",
+    handle: ({ body }) =>
+      typeof field(body, "email") === "string"
+        ? ok({ success: true, data: { message: "If the account needs verifying, a new link is on its way." } })
+        : validationError({ email: ["can't be blank"] }),
   },
   {
     method: "GET",
@@ -74,14 +104,15 @@ export const authRoutes: MockRoute[] = [
     },
   },
   {
-    method: "POST",
-    path: "/auth/password/change",
+    // Mirrors the live PUT /auth/change-password (which the app now calls instead).
+    method: "PUT",
+    path: "/auth/change-password",
     auth: true,
     async handle({ body }, { db, userId }) {
-      const currentPassword = field(body, "currentPassword");
-      const newPassword = field(body, "newPassword");
-      if (typeof currentPassword !== "string" || typeof newPassword !== "string" || newPassword.length < 8 || newPassword.length > 128) {
-        return fail(400, "bad_request", "The current password and an 8–128 character new password are required.");
+      const currentPassword = field(body, "current_password");
+      const newPassword = field(body, "new_password");
+      if (typeof currentPassword !== "string" || typeof newPassword !== "string" || newPassword.length < 8 || newPassword.length > 72) {
+        return fail(422, "validation_error", "The current password and an 8–72 character new password are required.");
       }
 
       const users = await db.users.all();
@@ -102,7 +133,7 @@ export const authRoutes: MockRoute[] = [
   {
     // Accepted whether or not the email has an account, so the endpoint can't be used to find accounts.
     method: "POST",
-    path: "/auth/password/forgot",
+    path: "/auth/forgot-password",
     handle: () => ok(null, 202),
   },
 ];

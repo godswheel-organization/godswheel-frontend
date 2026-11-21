@@ -211,6 +211,35 @@ in IndexedDB (database `godswheel-mock-api`). It is switched by `NEXT_PUBLIC_USE
   `features/sermons/server/getSermon.ts` (server-rendered detail page) still reads the catalogue directly and
   needs its fetch written then.
 
+### Sign-in and sessions (live API)
+
+- **Live endpoints:** sign-up, resend verification, verify email, login, refresh, `/auth/me`, logout, forgot
+  password, reset password and change password call the real GodsWheel API. Everything else is still the in-browser mock (`LIVE_ENDPOINTS` in `lib/api/baseQuery.ts`).
+- **Verify email:** the email's link opens `/verify-email?token=…` (confirm the path with the backend). The page
+  spends the single-use token once, deduplicated per token because React runs effects twice in development. It
+  then removes the token from the address bar and signs the user in with the returned session. Expired or used
+  links (422) and server errors each offer a fresh link.
+- **Reset password:** the reset email's link opens `/reset-password?token=…`. The page reads the token once and
+  removes it from the address bar, then sends it with the new password only when the user submits. A 422 with
+  `details.password` is shown on the password field. Any other 422 means the link can't be used, so the page
+  offers a new one from `/forgot-password`. Resetting doesn't sign the user in.
+- **Change password** (`/settings/password`): `PUT /auth/change-password` with `current_password` and
+  `new_password`, sent with the access token. A wrong current password is a 403, shown on that field, and it doesn't
+  end the session. On success this session stays signed in and the API revokes every other one.
+- **Through our own domain:** the browser calls `/api/v1/*` on this app, and `next.config.ts` forwards it to the
+  API. The API's refresh cookie (`HttpOnly`, `path=/api/v1/auth/refresh`) is then first-party. Called directly,
+  it would be a third-party cookie, which Safari and Firefox block.
+- **The access token** (one hour) is held in memory only, in `lib/api/auth/accessToken.ts`. It's never in
+  storage. A reload restores it with `POST /auth/refresh`, then `GET /auth/me` (`getSession` in `authApi`).
+- **Refreshing:** `baseQuery` refreshes a lapsed token before sending. On a 401 it refreshes once and retries,
+  and never loops. Refresh rotates the cookie, so `refreshAccessToken.ts` runs one refresh at a time: shared
+  within a tab, and locked across tabs with Web Locks.
+- **Guests make no auth calls:** a non-secret `localStorage` hint (`godswheel_signed_in`) skips the refresh when
+  this browser wasn't signed in.
+- **Mock bridge:** mock endpoints use the real signed-in user's id (`mockBaseQuery`), so library, notes and
+  settings work for real accounts until those endpoints are integrated.
+- **`useSession`** reports "loading" until hydration, because the server can't know the session.
+
 ### Player
 
 - `features/player/store/playerSlice.ts` holds what's playing and where (`positionSeconds`); the seek bar, ±15s,
