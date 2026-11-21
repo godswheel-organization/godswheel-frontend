@@ -14,6 +14,8 @@ export interface StoredUser {
   passwordHash: string;
   // Hashes of earlier passwords, newest first, so a change can turn down one used before.
   previousPasswordHashes?: string[];
+  // false until the emailed link is opened. Missing on the seeded demo account, which counts as verified.
+  emailVerified?: boolean;
   createdAt: string;
 }
 

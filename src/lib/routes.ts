@@ -16,6 +16,10 @@ export const ROUTES = {
   signIn: "/sign-in",
   signUp: "/sign-up",
   forgotPassword: "/forgot-password",
+  // Where the verification email's link lands: /verify-email?token=…
+  verifyEmail: "/verify-email",
+  // Where the password-reset email's link lands: /reset-password?token=…
+  resetPassword: "/reset-password",
   about: "/about",
   report: "/report",
   privacy: "/privacy-policy",

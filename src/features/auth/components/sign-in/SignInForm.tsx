@@ -11,8 +11,8 @@ import Button from "@/shared/ui/button/Button";
 import FormAlert from "@/shared/ui/form/FormAlert";
 import PasswordField from "@/shared/ui/form/PasswordField";
 import TextField from "@/shared/ui/form/TextField";
-import { useSignInMutation } from "../../api/authApi";
-import { authErrorMessage } from "../../lib/authErrors";
+import { useResendVerificationMutation, useSignInMutation } from "../../api/authApi";
+import { authErrorMessage, isUnverifiedSignIn } from "../../lib/authErrors";
 import { safeRedirect } from "../../lib/safeRedirect";
 import { signInSchema, type SignInFormValues } from "../../schemas/auth.schema";
 
@@ -21,6 +21,8 @@ export default function SignInForm() {
   const searchParams = useSearchParams();
   const [signIn] = useSignInMutation();
   const [formError, setFormError] = useState<string | null>(null);
+  // Set when sign-in was refused because the email isn't verified yet: offer to send the link again.
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
 
   const {
     register,
@@ -33,6 +35,7 @@ export default function SignInForm() {
 
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
+    setUnverifiedEmail(null);
     try {
       await signIn(values).unwrap();
       // The per-session key that encrypts offline drafts in IndexedDB; nothing is stored locally until it exists.
@@ -40,12 +43,18 @@ export default function SignInForm() {
       router.replace(safeRedirect(searchParams.get("redirectTo"), ROUTES.home));
     } catch (error) {
       setFormError(authErrorMessage(error, "signIn"));
+      if (isUnverifiedSignIn(error)) setUnverifiedEmail(values.email);
     }
   });
 
   return (
     <form noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
-      {formError && <FormAlert>{formError}</FormAlert>}
+      {formError && (
+        <FormAlert>
+          {formError}
+          {unverifiedEmail && <ResendVerification email={unverifiedEmail} />}
+        </FormAlert>
+      )}
 
       <TextField
         id="email"
@@ -77,5 +86,22 @@ export default function SignInForm() {
         {isSubmitting ? "Signing in…" : "Sign in"}
       </Button>
     </form>
+  );
+}
+
+// "Didn't get it?" for an unverified account, inside the sign-in error. The API answers the same whether or not
+// the address needs verifying, so this can't be used to find out who has an account.
+function ResendVerification({ email }: { email: string }) {
+  const [resend, { isLoading, isSuccess, isError }] = useResendVerificationMutation();
+  if (isSuccess) return <span className="mt-1 block text-foreground">We&rsquo;ve sent a new link to {email}.</span>;
+  return (
+    <button
+      type="button"
+      onClick={() => void resend({ email })}
+      disabled={isLoading}
+      className="mt-1 block font-medium text-foreground underline underline-offset-4 transition hover:text-brand-300 disabled:opacity-60"
+    >
+      {isLoading ? "Sending…" : isError ? "Couldn't send. Try again" : "Resend verification email"}
+    </button>
   );
 }

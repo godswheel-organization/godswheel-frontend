@@ -9,14 +9,23 @@ export const signInSchema = z.object({
 
 export type SignInFormValues = z.infer<typeof signInSchema>;
 
-export const signUpSchema = z.object({
-  firstName: personalNameSchema("First name"),
-  lastName: personalNameSchema("Last name"),
-  email: emailSchema,
-  password: passwordSchema,
-  // A boolean refined to true (not z.literal(true)) so the form can start with the box unticked.
-  termsAccepted: z.boolean().refine((accepted) => accepted, "Agree to the Terms and Privacy notice to continue"),
-});
+// The API stores one full name, up to 120 characters: the form's two fields joined with a space.
+export const FULL_NAME_MAX = 120;
+export const toFullName = (firstName: string, lastName: string) => `${firstName.trim()} ${lastName.trim()}`;
+
+export const signUpSchema = z
+  .object({
+    firstName: personalNameSchema("First name"),
+    lastName: personalNameSchema("Last name"),
+    email: emailSchema,
+    password: passwordSchema,
+    // A boolean refined to true (not z.literal(true)) so the form can start with the box unticked.
+    termsAccepted: z.boolean().refine((accepted) => accepted, "Agree to the Terms and Privacy notice to continue"),
+  })
+  .refine((values) => toFullName(values.firstName, values.lastName).length <= FULL_NAME_MAX, {
+    path: ["lastName"],
+    message: `First and last name together must be ${FULL_NAME_MAX} characters or fewer`,
+  });
 
 export type SignUpFormValues = z.infer<typeof signUpSchema>;
 
@@ -38,3 +47,17 @@ export const changePasswordSchema = z
   });
 
 export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
+
+// The reset-password page: the new password (the token comes from the link).
+export const resetPasswordSchema = z.object({
+  password: passwordSchema,
+});
+
+export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+
+// "Send me a new link" on the verify-email page.
+export const resendVerificationSchema = z.object({
+  email: emailSchema,
+});
+
+export type ResendVerificationFormValues = z.infer<typeof resendVerificationSchema>;

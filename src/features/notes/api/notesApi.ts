@@ -26,17 +26,19 @@ export const notesApi = createApi({
     saveNote: builder.mutation<SermonNote, SaveNoteRequest>({
       query: ({ sermonId, ...body }) => ({ url: noteUrl(sermonId), method: "PUT", body }),
       // Show the saved note straight away instead of waiting for a refetch.
+      // (A failed save rejects queryFulfilled; the caller reports it, so it's caught here rather than left unhandled.)
       async onQueryStarted({ sermonId }, { dispatch, queryFulfilled }) {
-        const { data: note } = await queryFulfilled;
-        dispatch(notesApi.util.upsertQueryData("getNote", sermonId, note));
+        const outcome = await queryFulfilled.catch(() => null);
+        if (outcome) dispatch(notesApi.util.upsertQueryData("getNote", sermonId, outcome.data));
       },
     }),
 
     deleteNote: builder.mutation<void, string>({
       query: (sermonId) => ({ url: noteUrl(sermonId), method: "DELETE" }),
       async onQueryStarted(sermonId, { dispatch, queryFulfilled }) {
-        await queryFulfilled;
-        dispatch(notesApi.util.upsertQueryData("getNote", sermonId, null));
+        if (await queryFulfilled.then(() => true, () => false)) {
+          dispatch(notesApi.util.upsertQueryData("getNote", sermonId, null));
+        }
       },
     }),
   }),

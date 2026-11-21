@@ -1,31 +1,22 @@
 import { z } from "zod";
 
-const envSchema = z
-  .object({
-    // Required only once the real backend is in use (NEXT_PUBLIC_USE_MOCK_API=false). Until then nothing calls it,
-    // so a deploy without it (e.g. a fresh Vercel project) still works.
-    NEXT_PUBLIC_API_BASE_URL: z.string().url().optional(),
-    NEXT_PUBLIC_SESSION_COOKIE_NAME: z.string().min(1).default("session"),
-    NEXT_PUBLIC_ENABLE_PWA: z
-      .string()
-      .default("false")
-      .transform((rawValue) => rawValue === "true"),
-    // Until the backend exists, API calls are answered by an in-browser mock (src/lib/api/mock) with data kept
-    // in IndexedDB. Set to "false" to call NEXT_PUBLIC_API_BASE_URL instead. On unless explicitly "false".
-    NEXT_PUBLIC_USE_MOCK_API: z
-      .string()
-      .default("true")
-      .transform((rawValue) => rawValue !== "false"),
-  })
-  .superRefine((value, ctx) => {
-    if (!value.NEXT_PUBLIC_USE_MOCK_API && !value.NEXT_PUBLIC_API_BASE_URL) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["NEXT_PUBLIC_API_BASE_URL"],
-        message: "is required when NEXT_PUBLIC_USE_MOCK_API is false",
-      });
-    }
-  });
+const envSchema = z.object({
+  // The GodsWheel API. Defaults to the deployed backend so a deploy without the variable still works.
+  // TODO(backend): point at the production API domain once there is one.
+  NEXT_PUBLIC_API_BASE_URL: z.string().url().default("https://godswheel.gigalixirapp.com/api/v1"),
+  NEXT_PUBLIC_SESSION_COOKIE_NAME: z.string().min(1).default("session"),
+  NEXT_PUBLIC_ENABLE_PWA: z
+    .string()
+    .default("false")
+    .transform((rawValue) => rawValue === "true"),
+  // While the backend is being integrated, endpoints not yet wired up are answered by an in-browser mock
+  // (src/lib/api/mock, data in IndexedDB); the integrated ones (LIVE_ENDPOINTS in lib/api/baseQuery.ts) always
+  // call NEXT_PUBLIC_API_BASE_URL. Set to "false" to send everything to the API. On unless explicitly "false".
+  NEXT_PUBLIC_USE_MOCK_API: z
+    .string()
+    .default("true")
+    .transform((rawValue) => rawValue !== "false"),
+});
 
 // An empty value (e.g. a blank variable in the hosting dashboard) counts as not set.
 const read = (value: string | undefined) => (value?.trim() ? value.trim() : undefined);

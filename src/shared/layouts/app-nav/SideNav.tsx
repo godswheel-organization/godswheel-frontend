@@ -1,7 +1,6 @@
 "use client";
 
 import { Menu } from "lucide-react";
-import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils/cn";
 import Logo from "@/shared/ui/brand/Logo";
 import { useAppNav } from "./AppNavProvider";
@@ -29,7 +28,8 @@ export default function SideNav(props: NavPanelProps) {
         >
           <Menu className="size-6" strokeWidth={1.75} aria-hidden />
         </button>
-        {!sidebarCollapsed && <Logo href={ROUTES.home} />}
+        {/* Leads out to the landing page, as on phones (Logo's default); Home is the first tab. */}
+        {!sidebarCollapsed && <Logo />}
       </div>
       <NavPanel {...props} variant={sidebarCollapsed ? "rail" : "full"} />
     </aside>

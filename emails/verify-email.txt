@@ -1,0 +1,17 @@
+Confirm your email
+
+Hi {{first_name}},
+
+Thanks for joining GodsWheel. Confirm this is your email address to activate your account, then save sermons and write notes as you listen.
+
+Confirm my email:
+{{verification_url}}
+
+This link works once and expires in {{link_expiry}}.
+
+You're getting this because someone created a GodsWheel account with {{email}}. If that wasn't you, ignore this email: no account is activated without this step.
+
+Report a problem: {{app_url}}/report
+Privacy notice: {{app_url}}/privacy-policy
+
+(c) {{year}} GodsWheel

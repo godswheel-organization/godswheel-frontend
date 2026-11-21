@@ -60,7 +60,8 @@ function ChangePasswordForm() {
     setFormError(null);
     try {
       await changePassword(values).unwrap();
-      toast.success("Password updated");
+      // The API keeps this session and revokes every other one.
+      toast.success("Password updated. You've been signed out on your other devices.");
       router.push(ROUTES.settings);
     } catch (error) {
       const { field, message } = changePasswordErrorMessage(error);

@@ -1,0 +1,26 @@
+Welcome to GodsWheel
+
+Hi {{first_name}},
+
+Your email is confirmed and your account is ready. Find sermons by speaker, category or scripture, and make room for the Word wherever you are.
+
+- Save: Keep the sermons you love in your library, ready whenever you need them.
+- Note: Write a note at the moment a message speaks to you. It's tied to that point in the sermon.
+- Share: Send a sermon to someone who needs to hear it.
+
+Start listening: {{app_url}}/home
+
+Not sure where to start? Pick a category:
+Purpose: {{app_url}}/sermons?topic=purpose
+Calling: {{app_url}}/sermons?topic=calling
+Faith: {{app_url}}/sermons?topic=faith
+Prayer: {{app_url}}/sermons?topic=prayer
+Family: {{app_url}}/sermons?topic=family
+Worship: {{app_url}}/sermons?topic=worship
+
+You're getting this because you just verified your GodsWheel account with {{email}}.
+
+Report a problem: {{app_url}}/report
+Privacy notice: {{app_url}}/privacy-policy
+
+(c) {{year}} GodsWheel

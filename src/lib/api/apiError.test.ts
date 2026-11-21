@@ -28,6 +28,35 @@ describe("toApiError", () => {
     });
   });
 
+  it("reads the GodsWheel API's nested error, with its per-field details", () => {
+    expect(
+      toApiError({
+        status: 422,
+        data: {
+          success: false,
+          error: {
+            code: "validation_error",
+            message: "The submitted account details are invalid.",
+            details: { email: ["has invalid format"], acceptedTerms: ["must be accepted"], junk: 3 },
+          },
+        },
+      }),
+    ).toEqual({
+      status: 422,
+      code: "validation_error",
+      message: "The submitted account details are invalid.",
+      details: { email: ["has invalid format"], acceptedTerms: ["must be accepted"] },
+      correlationId: undefined,
+      ref: undefined,
+      reason: undefined,
+      retryAfterSec: undefined,
+    });
+    expect(toApiError({ status: 500, data: { success: false, error: { code: "internal_server_error", details: null } } })).toMatchObject({
+      code: "internal_server_error",
+      details: undefined,
+    });
+  });
+
   it("maps a network failure", () => {
     expect(toApiError({ status: "FETCH_ERROR", error: "Failed to fetch" }).code).toBe("network_error");
   });

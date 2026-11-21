@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import SiteHeaderActions from "@/features/auth/components/SiteHeaderActions";
 import ClosingCta from "@/features/landing/components/ClosingCta";
 import FeaturedSermons from "@/features/landing/components/FeaturedSermons";
 import Hero from "@/features/landing/components/Hero";
@@ -48,7 +49,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       <JsonLd data={SITE_JSON_LD} />
-      <SiteHeader nav={LANDING_NAV} />
+      <SiteHeader nav={LANDING_NAV} actions={<SiteHeaderActions />} />
       <main className="flex-1">
         <Hero featuredSermon={featuredSermons[0]} />
         <TopicGrid />
