@@ -101,7 +101,7 @@ godswheel-frontend/
     │   ├── ui/                         # design-system primitives: button, form fields, chip, sheet, container…
     │   ├── layouts/                    # SiteHeader/Footer (landing), AppShell + app-nav, AuthLayout, AppTopBar
     │   │   └── app-nav/                # NavPanel (shared by the desktop sidebar and phone ☰ drawer), sidebar collapse
-    │   ├── pwa/                        # PwaRegister, PwaInstallBanner
+    │   ├── pwa/                        # PwaRegister, launch splash, install/ (toast, guide, shared install state)
     │   └── hooks/                      # useDebouncedValue, useAutosaveDraft, useOnlineSync
     │
     ├── lib/

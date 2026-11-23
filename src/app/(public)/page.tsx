@@ -9,6 +9,7 @@ import { LANDING_NAV } from "@/features/landing/content";
 import { featuredSermons } from "@/features/sermons/mocks/sermons";
 import SiteFooter from "@/shared/layouts/SiteFooter";
 import SiteHeader from "@/shared/layouts/SiteHeader";
+import InstallGuideOnArrival from "@/shared/pwa/install/InstallGuideOnArrival";
 import { ROUTES } from "@/lib/routes";
 import JsonLd from "@/lib/seo/JsonLd";
 import { BASE_OPEN_GRAPH } from "@/lib/seo/metadata";
@@ -49,6 +50,8 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       <JsonLd data={SITE_JSON_LD} />
+      {/* A few seconds in, shows first-time visitors how to put GodsWheel on their home screen. */}
+      <InstallGuideOnArrival />
       <SiteHeader nav={LANDING_NAV} actions={<SiteHeaderActions />} />
       <main className="flex-1">
         <Hero featuredSermon={featuredSermons[0]} />
