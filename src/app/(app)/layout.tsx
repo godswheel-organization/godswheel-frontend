@@ -9,6 +9,7 @@ import PlaybackEngine from "@/features/player/components/PlaybackEngine";
 import ExploreNav from "@/features/sermons/components/ExploreNav";
 import AppShell from "@/shared/layouts/AppShell";
 import { SIDEBAR_COOKIE } from "@/shared/layouts/app-nav/sidebarCookie";
+import PwaInstall from "@/shared/pwa/install/PwaInstall";
 import PwaRegister from "@/shared/pwa/PwaRegister";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -17,6 +18,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <PwaRegister />
+      <PwaInstall />
       <AppShell
         sidebarCollapsed={sidebarCollapsed}
         account={<AccountButton />}

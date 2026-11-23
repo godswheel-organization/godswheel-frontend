@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import PwaRegister from "@/shared/pwa/PwaRegister";
-import PwaInstallBanner from "@/shared/pwa/PwaInstallBanner";
+import PwaInstall from "@/shared/pwa/install/PwaInstall";
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <PwaRegister />
-      <PwaInstallBanner />
+      <PwaInstall />
       {children}
     </>
   );
