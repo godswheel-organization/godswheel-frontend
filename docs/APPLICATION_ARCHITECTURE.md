@@ -213,7 +213,7 @@ in IndexedDB (database `godswheel-mock-api`). It is switched by `NEXT_PUBLIC_USE
 
 ### Sign-in and sessions (live API)
 
-- **Live endpoints:** sign-up, resend verification, verify email, login, refresh, `/auth/me`, logout, forgot
+- **Live endpoints:** sign-up, resend verification, verify email, login, `/auth/me`, logout, forgot
   password, reset password and change password call the real GodsWheel API. Everything else is still the in-browser mock (`LIVE_ENDPOINTS` in `lib/api/baseQuery.ts`).
 - **Verify email:** the email's link opens `/verify-email?token=…` (confirm the path with the backend). The page
   spends the single-use token once, deduplicated per token because React runs effects twice in development. It
@@ -227,15 +227,18 @@ in IndexedDB (database `godswheel-mock-api`). It is switched by `NEXT_PUBLIC_USE
   `new_password`, sent with the access token. A wrong current password is a 403, shown on that field, and it doesn't
   end the session. On success this session stays signed in and the API revokes every other one.
 - **Through our own domain:** the browser calls `/api/v1/*` on this app, and `next.config.ts` forwards it to the
-  API. The API's refresh cookie (`HttpOnly`, `path=/api/v1/auth/refresh`) is then first-party. Called directly,
-  it would be a third-party cookie, which Safari and Firefox block.
-- **The access token** (one hour) is held in memory only, in `lib/api/auth/accessToken.ts`. It's never in
-  storage. A reload restores it with `POST /auth/refresh`, then `GET /auth/me` (`getSession` in `authApi`).
-- **Refreshing:** `baseQuery` refreshes a lapsed token before sending. On a 401 it refreshes once and retries,
-  and never loops. Refresh rotates the cookie, so `refreshAccessToken.ts` runs one refresh at a time: shared
-  within a tab, and locked across tabs with Web Locks.
-- **Guests make no auth calls:** a non-secret `localStorage` hint (`godswheel_signed_in`) skips the refresh when
-  this browser wasn't signed in.
+  API, so calls are same-origin (no CORS).
+- **Staying signed in:** the API's access token has no expiry and there's no refresh. Login and verify-email
+  return `{ user, accessToken, tokenType, issuedAt }`, which is saved in `localStorage` (`godswheel_session`, in
+  `lib/api/auth/accessToken.ts`), so it survives reloads and closing the browser. `baseQuery` sends it as a Bearer
+  header. Users stay signed in until they press Sign out (`POST /auth/logout` revokes the token, and the device
+  forgets it even if the API can't be reached).
+- **Checking the session:** on load, `getSession` asks `GET /auth/me` with the saved token. Only a 401 (the API
+  revoked the token, e.g. after a password change on another device) ends the session on this device. Offline or a
+  server error keeps the user signed in as saved. A 401 on any other call makes `SessionWatcher` run that check.
+- **Guests make no auth calls:** no saved token, no request.
+- **Tabs stay in step:** `SessionWatcher` listens for `storage` events, so signing in or out in one tab updates
+  the others (and clears per-user data when the person changes).
 - **Mock bridge:** mock endpoints use the real signed-in user's id (`mockBaseQuery`), so library, notes and
   settings work for real accounts until those endpoints are integrated.
 - **`useSession`** reports "loading" until hydration, because the server can't know the session.
@@ -316,9 +319,9 @@ Add a skeleton beside any new list or card that waits on data.
 
 | Concern | How it's addressed |
 |---|---|
-| Session | httpOnly cookie set by the backend, sent with `credentials: "include"`; never stored in JS |
+| Session | Bearer access token (no expiry) saved in `localStorage` until sign-out; kept safe from injected script by the CSP below |
 | CSRF | `baseQuery` copies the `godswheel_csrf` cookie into an `X-CSRF-Token` header |
 | Script injection | Strict `script-src` CSP with a fresh per-request nonce from `src/proxy.ts` |
 | Framing, MIME sniffing, HSTS | Static headers in `next.config.ts` |
 | Data at rest in the browser | AES-GCM encryption of every IndexedDB draft |
-| Session expiry | Any non-auth 401 dispatches `godswheel:unauthorized` on `window` for a session watcher to handle |
+| Revoked sessions | Any non-auth 401 dispatches `godswheel:unauthorized`; `SessionWatcher` re-checks with `GET /auth/me` |

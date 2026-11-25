@@ -1,15 +1,7 @@
 import { createApi, type FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "@/lib/api/baseQuery";
 import { API_TAGS } from "@/lib/api/apiTags";
-import {
-  clearSession,
-  getAccessToken,
-  hasAccessToken,
-  mayHaveRefreshCookie,
-  setAccessToken,
-  setSessionIdentity,
-} from "@/lib/api/auth/accessToken";
-import { refreshAccessToken } from "@/lib/api/auth/refreshAccessToken";
+import { clearSession, getAccessToken, getSessionIdentity, saveSession, setSessionIdentity } from "@/lib/api/auth/accessToken";
 import { toAuthSession } from "../lib/session";
 import type {
   ApiEnvelope,
@@ -33,8 +25,8 @@ export const authApi = createApi({
   baseQuery,
   tagTypes: [API_TAGS.Auth],
   endpoints: (builder) => ({
-    // Live. Unverified accounts are refused (403). On success the access token is kept in memory and the API sets
-    // the HttpOnly refresh cookie; the session is filled from the response, so no extra /auth/me call is needed.
+    // Live. Unverified accounts are refused (403). On success the session is saved on this device (it lasts until
+    // the user signs out) and filled from the response, so no extra /auth/me call is needed.
     signIn: builder.mutation<AuthSession, SignInRequest>({
       queryFn: (body, _api, _extraOptions, fetchWithBaseQuery) =>
         startSession(fetchWithBaseQuery({ url: "/auth/login", method: "POST", body })),
@@ -84,22 +76,21 @@ export const authApi = createApi({
       }),
     }),
 
-    // Live. Who's signed in, or null for a guest. A reload has no access token in memory, so this first trades the
-    // refresh cookie for one (restoring the session), then asks GET /auth/me.
+    // Live. Who's signed in, or null for a guest (who makes no call at all). With a saved session it asks GET
+    // /auth/me, which also catches a token the API has revoked (401: then, and only then, the session ends here).
+    // If the API can't be reached (offline, server trouble) the user stays signed in as the saved session says.
     getSession: builder.query<AuthSession | null, void>({
       async queryFn(_arg, _api, _extraOptions, fetchWithBaseQuery) {
-        if (!getAccessToken()) {
-          if (!hasAccessToken() && !mayHaveRefreshCookie()) return { data: null };
-          const outcome = await refreshAccessToken();
-          if (outcome === "signed-out") return { data: null };
-          if (outcome === "unavailable") return { error: { status: "FETCH_ERROR", error: "Couldn't restore the session" } };
-        }
+        if (!getAccessToken()) return { data: null };
         const result = await fetchWithBaseQuery("/auth/me");
         if (result.error?.status === 401) {
           clearSession();
           return { data: null };
         }
-        if (result.error) return { error: result.error };
+        if (result.error) {
+          const saved = getSessionIdentity();
+          return saved ? { data: toAuthSession(saved) } : { error: result.error };
+        }
         const user = (result.data as ApiEnvelope<PublicUser>).data;
         setSessionIdentity(user);
         return { data: toAuthSession(user) };
@@ -107,7 +98,7 @@ export const authApi = createApi({
       providesTags: [API_TAGS.Auth],
     }),
 
-    // Live. Revokes this session on the API and clears its refresh cookie. This device forgets the session even if
+    // Live. The only way a session ends on purpose: revokes the token on the API, and this device forgets it even if
     // the API can't be reached, so signing out always works here.
     signOut: builder.mutation<null, void>({
       async queryFn(_arg, _api, _extraOptions, fetchWithBaseQuery) {
@@ -123,14 +114,13 @@ export const authApi = createApi({
 
 type BaseQueryResult = { data?: unknown; error?: FetchBaseQueryError };
 
-// Login and email verification both answer with a session ({ user, accessToken, expiresAt }). Keep the token in
-// memory before the caller's await resolves, so whatever runs next is already signed in.
+// Login and email verification both answer with a session ({ user, accessToken, tokenType, issuedAt }). Save it
+// before the caller's await resolves, so whatever runs next is already signed in.
 async function startSession(request: BaseQueryResult | PromiseLike<BaseQueryResult>): Promise<{ data: AuthSession } | { error: FetchBaseQueryError }> {
   const result = await request;
   if (result.error) return { error: result.error };
-  const { user, accessToken, expiresAt } = (result.data as ApiEnvelope<LoginResult>).data;
-  setAccessToken({ accessToken, expiresAt });
-  setSessionIdentity(user);
+  const { user, accessToken } = (result.data as ApiEnvelope<LoginResult>).data;
+  saveSession(accessToken, user);
   return { data: toAuthSession(user) };
 }
 

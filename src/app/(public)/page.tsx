@@ -4,6 +4,7 @@ import ClosingCta from "@/features/landing/components/ClosingCta";
 import FeaturedSermons from "@/features/landing/components/FeaturedSermons";
 import Hero from "@/features/landing/components/Hero";
 import HowItWorks from "@/features/landing/components/HowItWorks";
+import MissionStatement from "@/features/landing/components/MissionStatement";
 import TopicGrid from "@/features/landing/components/TopicGrid";
 import { LANDING_NAV } from "@/features/landing/content";
 import { featuredSermons } from "@/features/sermons/mocks/sermons";
@@ -58,6 +59,7 @@ export default function Home() {
         <TopicGrid />
         <FeaturedSermons sermons={featuredSermons} />
         <HowItWorks />
+        <MissionStatement />
         <ClosingCta />
       </main>
       <SiteFooter />
