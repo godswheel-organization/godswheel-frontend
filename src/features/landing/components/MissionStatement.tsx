@@ -19,12 +19,12 @@ export default function MissionStatement() {
           <SectionHeading id="mission-title" eyebrow={MISSION_COPY.eyebrow} title={MISSION_COPY.title} align="center" />
         </Reveal>
 
-        <Reveal delayMs={120} className="mx-auto mt-10 max-w-3xl text-center">
+        <Reveal delayMs={120} className="mx-auto mt-10 max-w-2xl text-center">
           <figure>
-            <span aria-hidden className="block font-serif text-7xl leading-none text-brand-500/40 sm:text-8xl">
+            <span aria-hidden className="block font-serif text-6xl leading-none text-brand-500/40 sm:text-7xl">
               &ldquo;
             </span>
-            <blockquote className="-mt-4 font-serif text-2xl leading-snug text-foreground/85 sm:-mt-6 sm:text-[2rem] sm:leading-snug">
+            <blockquote className="-mt-3 font-serif text-lg leading-relaxed text-foreground/85 sm:-mt-5 sm:text-2xl sm:leading-relaxed">
               {statement.map((part, index) =>
                 part.highlight ? (
                   <span key={index} className="text-brand-400">
