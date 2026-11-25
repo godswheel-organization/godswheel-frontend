@@ -20,10 +20,9 @@ const devOrigins = process.env.NEXT_PUBLIC_APP_URL
   ? [new URL(process.env.NEXT_PUBLIC_APP_URL).hostname]
   : [];
 
-// Same-origin API proxy. The browser calls this app's own /api/v1/* and Next forwards it to the GodsWheel API.
-// Why: the API's refresh-token cookie (HttpOnly, path=/api/v1/auth/refresh) is set by whichever host the browser
-// called. Called directly, that's another site's cookie, which Safari and Firefox block, so users would be signed
-// out on every reload. Through this proxy it's this site's own cookie, and the path still matches.
+// Same-origin API proxy. The browser calls this app's own /api/v1/* and Next forwards it to the GodsWheel API,
+// so calls are same-origin: no CORS setup or preflight requests. (It was first added for the API's old refresh
+// cookie, which needed to be first-party; sessions are now a Bearer token saved on the device.)
 // Keep the default in sync with NEXT_PUBLIC_API_BASE_URL's in src/lib/env.ts.
 const apiBaseUrl = new URL(process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "https://godswheel.gigalixirapp.com/api/v1");
 const apiPath = apiBaseUrl.pathname.replace(/\/+$/, "");

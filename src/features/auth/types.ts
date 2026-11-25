@@ -30,14 +30,14 @@ export interface SignUpResult {
   user: PublicUser;
 }
 
-// POST /auth/login. The refresh token isn't here: the API sets it as an HttpOnly cookie.
+// POST /auth/login and POST /auth/verify-email. The token has no expiry and there's no refresh: it lasts until
+// POST /auth/logout revokes it.
 export interface LoginResult {
   user: PublicUser;
   accessToken: string;
-  // ISO time the access token stops working (about an hour after login).
-  expiresAt: string;
-  expiresIn: number;
   tokenType: "Bearer";
+  // ISO time the token was issued.
+  issuedAt: string;
 }
 
 // POST /auth/verify-email: the single-use token from the verification link.

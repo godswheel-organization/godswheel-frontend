@@ -23,15 +23,20 @@ export default function SiteHeader({ nav = [], actions }: SiteHeaderProps) {
 
         {nav.length > 0 && (
           <nav aria-label="Main" className="hidden items-center gap-8 md:flex">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-sm font-medium text-muted transition hover:text-foreground"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {nav.map((item) => {
+              const className = "text-sm font-medium text-muted transition hover:text-foreground";
+              // Section links ("#mission") are plain anchors: the browser scrolls to the section every time, even when
+              // the address already ends in that hash. Next's Link ignores a click on the hash you're already on.
+              return item.href.startsWith("#") ? (
+                <a key={item.href} href={item.href} className={className}>
+                  {item.label}
+                </a>
+              ) : (
+                <Link key={item.href} href={item.href} className={className}>
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
         )}
 
