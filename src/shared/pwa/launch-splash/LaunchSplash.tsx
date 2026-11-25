@@ -8,14 +8,15 @@ import LaunchSplashDismiss from "./LaunchSplashDismiss";
 export default function LaunchSplash() {
   return (
     <>
+      {/* Styled only by splashStyles.ts (inlined in <head>), so it draws before the main stylesheet loads. */}
       <div className="launch-splash" aria-hidden>
         <div className="launch-splash-glow" />
-        <div className="relative flex flex-col items-center">
+        <div className="launch-splash-body">
           <span className="launch-splash-ring" />
-          <span className="launch-splash-mark flex size-20 items-center justify-center rounded-2xl border border-border bg-surface shadow-theme-xl">
-            <Cross className="size-10 text-foreground" strokeWidth={1.5} />
+          <span className="launch-splash-mark">
+            <Cross strokeWidth={1.5} />
           </span>
-          <span className="launch-splash-name mt-5 text-2xl font-semibold tracking-tight text-foreground">GodsWheel</span>
+          <span className="launch-splash-name">GodsWheel</span>
         </div>
       </div>
       <LaunchSplashDismiss />

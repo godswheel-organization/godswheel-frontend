@@ -12,6 +12,7 @@ import {
 } from "@/lib/seo/site";
 import LaunchSplash from "@/shared/pwa/launch-splash/LaunchSplash";
 import { SPLASH_SCRIPT } from "@/shared/pwa/launch-splash/splashConfig";
+import { SPLASH_CSS } from "@/shared/pwa/launch-splash/splashStyles";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -82,6 +83,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
+        {/* The splash's own styles (and the dark page background), inline so the first paint doesn't wait for the
+            main stylesheet: the splash shows the moment the HTML arrives, with no blank or white flash. */}
+        <style nonce={nonce} dangerouslySetInnerHTML={{ __html: SPLASH_CSS }} />
         {/* Runs before the first paint, so the splash covers the screen from the first frame (no flash). */}
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: SPLASH_SCRIPT }} />
       </head>
