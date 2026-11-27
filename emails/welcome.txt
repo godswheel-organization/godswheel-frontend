@@ -11,12 +11,12 @@ Your email is confirmed and your account is ready. Find sermons by speaker, cate
 Start listening: {{app_url}}/home
 
 Not sure where to start? Pick a category:
-Purpose: {{app_url}}/sermons?topic=purpose
-Calling: {{app_url}}/sermons?topic=calling
-Faith: {{app_url}}/sermons?topic=faith
-Prayer: {{app_url}}/sermons?topic=prayer
-Family: {{app_url}}/sermons?topic=family
-Worship: {{app_url}}/sermons?topic=worship
+Faith & Trust: {{app_url}}/sermons?category=faith-trust
+Prayer & Worship: {{app_url}}/sermons?category=prayer-worship
+Holy Spirit: {{app_url}}/sermons?category=holy-spirit
+Spiritual Growth: {{app_url}}/sermons?category=spiritual-growth
+Hope & Encouragement: {{app_url}}/sermons?category=hope-encouragement
+Love & Relationships: {{app_url}}/sermons?category=love-relationships
 
 You're getting this because you just verified your GodsWheel account with {{email}}.
 

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import BrowseSermons from "@/features/sermons/components/BrowseSermons";
 import SermonListSkeleton from "@/features/sermons/components/SermonListSkeleton";
 import { parseSermonFilters } from "@/features/sermons/lib/sermonFilters";
-import { TOPICS } from "@/features/sermons/lib/topics";
+import { getCategory } from "@/features/sermons/server/getCategories";
 import { ROUTES } from "@/lib/routes";
 import { pageMetadata } from "@/lib/seo/metadata";
 import Container from "@/shared/ui/container/Container";
@@ -15,15 +15,16 @@ export async function generateMetadata({ searchParams }: PageProps<"/sermons">):
   for (const [key, value] of Object.entries(await searchParams)) {
     if (typeof value === "string") params.set(key, value);
   }
-  const { topic, q, speaker, book } = parseSermonFilters(params);
+  const { category: slug, q, speaker, book } = parseSermonFilters(params);
   const narrowed = Boolean(q || speaker || book);
+  // Named from the API's live list; an unknown slug falls through to the main list's title.
+  const category = slug && !narrowed ? await getCategory(slug) : undefined;
 
-  if (topic && !narrowed) {
-    const label = TOPICS[topic].label;
+  if (category) {
     return pageMetadata({
-      title: `${label} sermons`,
-      description: `Listen to sermons on ${label.toLowerCase()} by speaker or scripture, free on GodsWheel.`,
-      path: ROUTES.sermonsByTopic(topic),
+      title: `${category.name} sermons`,
+      description: `Listen to sermons on ${category.name.toLowerCase()} by speaker or scripture, free on GodsWheel.`,
+      path: ROUTES.sermonsByCategory(category.slug),
     });
   }
   return {

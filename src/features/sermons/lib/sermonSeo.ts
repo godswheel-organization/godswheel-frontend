@@ -1,15 +1,17 @@
 import { absoluteUrl, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 import { ROUTES } from "@/lib/routes";
 import type { Sermon } from "../types";
-import { TOPICS } from "./topics";
+import { primaryCategory, sermonCategories } from "./categories";
+import { sermonMinutes } from "./formatSermon";
 
 // Search-result title: what people search by is the sermon and the preacher.
 export const sermonSeoTitle = (sermon: Sermon) => `${sermon.title} by ${sermon.preacher}`;
 
 // Search engines show ~155 characters; cut at a word boundary rather than mid-word.
 export function sermonSeoDescription(sermon: Sermon, maxLength = 155): string {
-  const lead = `${sermon.scripture} · ${sermon.durationMinutes} min. `;
-  const text = `${lead}${sermon.description}`;
+  const minutes = sermonMinutes(sermon);
+  const lead = [sermon.scripture, minutes && `${minutes} min`].filter(Boolean).join(" · ");
+  const text = [lead && `${lead}.`, sermon.description ?? `A sermon by ${sermon.preacher}.`].filter(Boolean).join(" ");
   if (text.length <= maxLength) return text;
   return `${text.slice(0, maxLength - 1).replace(/\s+\S*$/, "")}…`;
 }
@@ -20,8 +22,8 @@ const LANGUAGE_CODES: Record<string, string> = { English: "en", Yoruba: "yo", Ig
 // Structured data for a sermon page: the sermon as an audio recording, and where it sits in the site.
 export function sermonJsonLd(sermon: Sermon): Record<string, unknown>[] {
   const url = absoluteUrl(ROUTES.sermon(sermon.id));
-  const topic = TOPICS[sermon.topic].label;
-  const topics = [sermon.topic, ...(sermon.relatedTopics ?? [])].map((key) => TOPICS[key].label);
+  const main = primaryCategory(sermon);
+  const categoryNames = sermonCategories(sermon).map((category) => category.name);
 
   return [
     {
@@ -30,26 +32,28 @@ export function sermonJsonLd(sermon: Sermon): Record<string, unknown>[] {
       "@id": url,
       url,
       name: sermon.title,
-      description: sermon.description,
-      // ISO 8601 duration, e.g. PT38M.
-      duration: `PT${sermon.durationMinutes}M`,
-      inLanguage: LANGUAGE_CODES[sermon.language] ?? sermon.language,
-      datePublished: sermon.publishedAt,
+      ...(sermon.description && { description: sermon.description }),
+      // ISO 8601 duration, e.g. PT1989S.
+      ...(sermon.durationSeconds && { duration: `PT${sermon.durationSeconds}S` }),
+      ...(sermon.language && { inLanguage: LANGUAGE_CODES[sermon.language] ?? sermon.language }),
+      ...(sermon.publishedAt && { datePublished: sermon.publishedAt }),
       author: { "@type": "Person", name: sermon.preacher },
       genre: "Sermon",
-      keywords: [...topics, sermon.scripture, ...(sermon.scriptureRefs ?? [])].join(", "),
-      ...(sermon.audioUrl && { contentUrl: sermon.audioUrl, encodingFormat: "audio/mpeg" }),
+      keywords: [...categoryNames, sermon.scripture, ...(sermon.scriptureRefs ?? [])].filter(Boolean).join(", "),
+      // Only a public address: the API says audioUrl will become a storage key, played through presigned links.
+      ...(/^https?:\/\//.test(sermon.audioUrl ?? "") && { contentUrl: sermon.audioUrl, encodingFormat: "audio/mpeg" }),
       isPartOf: { "@type": "WebSite", name: SITE_NAME, url: SITE_URL },
-      copyrightHolder: { "@type": "Organization", name: sermon.source.name },
+      ...(sermon.source && { copyrightHolder: { "@type": "Organization", name: sermon.source.name } }),
     },
     {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
+      // Sermons › its main category (when it has one) › the sermon.
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Sermons", item: absoluteUrl(ROUTES.sermons) },
-        { "@type": "ListItem", position: 2, name: topic, item: absoluteUrl(ROUTES.sermonsByTopic(sermon.topic)) },
-        { "@type": "ListItem", position: 3, name: sermon.title, item: url },
-      ],
+        { name: "Sermons", item: absoluteUrl(ROUTES.sermons) },
+        ...(main ? [{ name: main.name, item: absoluteUrl(ROUTES.sermonsByCategory(main.slug)) }] : []),
+        { name: sermon.title, item: url },
+      ].map((crumb, index) => ({ "@type": "ListItem", position: index + 1, ...crumb })),
     },
   ];
 }

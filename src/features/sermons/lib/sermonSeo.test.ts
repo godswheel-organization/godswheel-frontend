@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sermonJsonLd, sermonSeoDescription, sermonSeoTitle } from "./sermonSeo";
+import { mockCategories } from "../mocks/categories";
 import { testSermon } from "./testSermon";
 
 const sermon = testSermon({
@@ -7,9 +8,8 @@ const sermon = testSermon({
   title: "Living by Faith",
   preacher: "Pastor Daniel Okafor",
   scripture: "Hebrews 11:1",
-  durationMinutes: 42,
-  topic: "faith",
-  relatedTopics: ["prayer"],
+  durationSeconds: 42 * 60,
+  categories: mockCategories("faith-trust", "prayer-worship"),
   description: "Faith is the substance of things hoped for.",
 });
 
@@ -30,18 +30,36 @@ describe("sermon SEO", () => {
     expect(audio).toMatchObject({
       "@type": "AudioObject",
       name: "Living by Faith",
-      duration: "PT42M",
+      duration: "PT2520S",
       inLanguage: "en",
       datePublished: "2026-01-01",
       author: { "@type": "Person", name: "Pastor Daniel Okafor" },
-      keywords: "Faith, Prayer, Hebrews 11:1",
+      keywords: "Faith & Trust, Prayer & Worship, Hebrews 11:1",
     });
     expect(audio).not.toHaveProperty("contentUrl");
     expect(String(audio.url)).toMatch(/\/sermons\/living-by-faith$/);
     expect((breadcrumbs.itemListElement as { name: string }[]).map((item) => item.name)).toEqual([
       "Sermons",
-      "Faith",
+      "Faith & Trust",
       "Living by Faith",
     ]);
+  });
+
+  it("leaves the category out of the breadcrumbs when a sermon has none", () => {
+    const [, breadcrumbs] = sermonJsonLd({ ...sermon, categories: [] });
+    expect((breadcrumbs.itemListElement as { name: string; position: number }[]).map((item) => `${item.position}:${item.name}`)).toEqual([
+      "1:Sermons",
+      "2:Living by Faith",
+    ]);
+  });
+
+  it("describes an API sermon with only what it has", () => {
+    const bare = { id: "x", title: "Hope", preacher: "Dr Allan Brown", categories: [] };
+    expect(sermonSeoDescription(bare)).toBe("A sermon by Dr Allan Brown.");
+    const [audio] = sermonJsonLd(bare);
+    for (const key of ["description", "duration", "inLanguage", "datePublished", "copyrightHolder"]) {
+      expect(audio).not.toHaveProperty(key);
+    }
+    expect(audio).toMatchObject({ keywords: "" });
   });
 });

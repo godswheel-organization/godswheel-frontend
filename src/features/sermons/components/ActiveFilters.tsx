@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useGetSpeakersQuery } from "../api/sermonsApi";
 import type { SermonFilters } from "../types";
 
 type RemovableFilter = "speaker" | "book";
@@ -12,10 +13,13 @@ interface ActiveFiltersProps {
 }
 
 // The speaker/book picked in the filter sheet, each removable, plus "Clear all".
-// (The topic shows as the lit chip in the row above, so it isn't repeated here.)
+// (The category shows as the lit chip in the row above, so it isn't repeated here.)
 export default function ActiveFilters({ filters, onRemove, onClearAll, className }: ActiveFiltersProps) {
+  // The URL holds the speaker's id; the chip shows their name once the speakers are in.
+  const { data: speakers } = useGetSpeakersQuery();
+  const speakerName = speakers?.find((speaker) => speaker.id === filters.speaker)?.name ?? "Speaker";
   const chips = [
-    filters.speaker && { filter: "speaker" as const, label: filters.speaker },
+    filters.speaker && { filter: "speaker" as const, label: speakerName },
     filters.book && { filter: "book" as const, label: filters.book },
   ].filter(Boolean) as { filter: RemovableFilter; label: string }[];
 

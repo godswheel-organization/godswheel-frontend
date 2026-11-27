@@ -3,7 +3,7 @@ import { formatPlaybackTime, formatSermonDate, formatSermonMeta } from "./format
 import { testSermon } from "./testSermon";
 
 describe("formatSermonMeta", () => {
-  const sermon = testSermon({ id: "1", scripture: "Isaiah 60:1", durationMinutes: 38, publishedAt: "2026-10-12" });
+  const sermon = testSermon({ id: "1", scripture: "Isaiah 60:1", durationSeconds: 38 * 60, publishedAt: "2026-10-12" });
 
   it("joins scripture, length and language", () => {
     expect(formatSermonMeta(sermon)).toBe("Isaiah 60:1 · 38 min · English");
@@ -11,6 +11,15 @@ describe("formatSermonMeta", () => {
 
   it("adds the date for the detail page", () => {
     expect(formatSermonMeta(sermon, { withDate: true })).toBe("Isaiah 60:1 · 38 min · English · 12 Oct 2026");
+  });
+
+  it("leaves out what a sermon from a list doesn't have, and rounds seconds to minutes", () => {
+    const summary = testSermon({ id: "2", durationSeconds: 1989, publishedAt: "2026-11-23T09:45:30Z" });
+    delete summary.scripture;
+    delete summary.language;
+    expect(formatSermonMeta(summary)).toBe("33 min");
+    expect(formatSermonMeta(summary, { withDate: true })).toBe("33 min · 23 Nov 2026");
+    expect(formatSermonMeta({ ...summary, durationSeconds: undefined })).toBe("");
   });
 });
 

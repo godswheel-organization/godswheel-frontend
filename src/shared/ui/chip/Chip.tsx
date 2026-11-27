@@ -18,7 +18,7 @@ export default function Chip({ href, active = false, scroll, children }: ChipPro
       scroll={scroll}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "inline-flex shrink-0 items-center rounded-full border px-5 py-2.5 text-base transition",
+        "inline-flex shrink-0 items-center whitespace-nowrap rounded-full border px-5 py-2.5 text-base transition",
         active
           ? "border-brand-500 bg-brand-500 font-medium text-on-brand"
           : "border-border text-foreground hover:border-brand-500/50 hover:bg-surface"

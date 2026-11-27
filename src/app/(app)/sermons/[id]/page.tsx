@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import SermonDetail from "@/features/sermons/components/detail/SermonDetail";
 import { sermonJsonLd, sermonSeoDescription, sermonSeoTitle } from "@/features/sermons/lib/sermonSeo";
-import { TOPICS } from "@/features/sermons/lib/topics";
+import { primaryCategory, sermonCategories } from "@/features/sermons/lib/categories";
 import { getSermon } from "@/features/sermons/server/getSermon";
 import { ROUTES } from "@/lib/routes";
 import JsonLd from "@/lib/seo/JsonLd";
@@ -20,8 +20,10 @@ export async function generateMetadata({ params }: PageProps<"/sermons/[id]">): 
     openGraph: {
       type: "article",
       publishedTime: sermon.publishedAt,
-      section: TOPICS[sermon.topic].label,
-      tags: [sermon.scripture, ...(sermon.relatedTopics ?? []).map((topic) => TOPICS[topic].label)],
+      section: primaryCategory(sermon)?.name,
+      tags: [sermon.scripture, ...sermonCategories(sermon).slice(1).map((category) => category.name)].filter(
+        (tag): tag is string => Boolean(tag)
+      ),
     },
   });
 }

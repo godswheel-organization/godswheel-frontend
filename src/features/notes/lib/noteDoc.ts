@@ -16,11 +16,3 @@ export function docFromText(text: string): NoteDoc {
 
 export const docOf = (note: SermonNote | null | undefined): NoteDoc | undefined =>
   note ? (note.doc ?? docFromText(note.text)) : undefined;
-
-// What the API checks before storing a doc: the right shape and a sane size.
-export function isNoteDoc(value: unknown): value is NoteDoc {
-  if (!value || typeof value !== "object" || (value as { type?: unknown }).type !== "doc") return false;
-  const content = (value as { content?: unknown }).content;
-  if (content !== undefined && !Array.isArray(content)) return false;
-  return JSON.stringify(value).length <= NOTE_MAX_LENGTH * 20;
-}

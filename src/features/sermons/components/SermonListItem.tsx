@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatSermonMeta } from "../lib/formatSermon";
 import type { Sermon } from "../types";
 import SermonArtwork from "./SermonArtwork";
+import { primaryCategory } from "../lib/categories";
 
 interface SermonListItemProps {
   sermon: Sermon;
@@ -31,7 +32,7 @@ export default function SermonListItem({ sermon, action, meta }: SermonListItemP
         isCurrent ? "border-brand-500/60 bg-surface/60" : "border-border hover:border-brand-500/40 hover:bg-surface/40"
       )}
     >
-      <SermonArtwork topic={sermon.topic} className="size-16 shrink-0 sm:size-20" iconClassName="size-6" />
+      <SermonArtwork category={primaryCategory(sermon)?.slug} className="size-16 shrink-0 sm:size-20" iconClassName="size-6" />
 
       <div className="min-w-0 flex-1">
         <h3 className={cn("text-base font-semibold", isCurrent ? "text-brand-500" : "text-foreground")}>

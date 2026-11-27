@@ -4,6 +4,7 @@ import { Pause, Play } from "lucide-react";
 import SermonArtwork from "@/features/sermons/components/SermonArtwork";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
 import { durationOf, setExpanded, togglePlayback } from "../store/playerSlice";
+import { primaryCategory } from "@/features/sermons/lib/categories";
 
 // The now-playing bar, pinned above the bottom tabs on phones and along the bottom from md up.
 // Tap it to open the full player. Renders nothing until a sermon is picked.
@@ -30,7 +31,7 @@ export default function MiniPlayer() {
         </div>
 
         <div className="relative flex h-[4.25rem] items-center gap-3 border-t border-border/60 bg-surface px-4 sm:px-6">
-          <SermonArtwork topic={current.topic} className="size-11 shrink-0 rounded-lg" iconClassName="size-5" />
+          <SermonArtwork category={primaryCategory(current)?.slug} className="size-11 shrink-0 rounded-lg" iconClassName="size-5" />
           <div className="min-w-0 flex-1">
             {/* ::after stretches this over the bar, so tapping anywhere but Play opens the full player. */}
             <button

@@ -28,9 +28,11 @@ export default function SavedSermonsScreen() {
   const sorted = useMemo(() => {
     if (!saved) return undefined;
     const items = [...saved];
-    if (sort === "oldest") items.sort((a, b) => a.savedAt.localeCompare(b.savedAt));
+    // The API doesn't say when each was saved: sermons go by publish date, after any saved in this session.
+    const when = (item: (typeof items)[number]) => item.savedAt ?? item.sermon.publishedAt ?? "";
+    if (sort === "oldest") items.sort((a, b) => when(a).localeCompare(when(b)));
     else if (sort === "title") items.sort((a, b) => a.sermon.title.localeCompare(b.sermon.title));
-    else items.sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+    else items.sort((a, b) => when(b).localeCompare(when(a)));
     return items;
   }, [saved, sort]);
 

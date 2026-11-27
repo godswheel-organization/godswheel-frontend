@@ -7,7 +7,8 @@ import { HERO_COPY } from "../content";
 import HeroPreview from "./HeroPreview";
 
 interface HeroProps {
-  featuredSermon: Sermon;
+  // The player still beside the copy; left out when no sermon could be loaded.
+  featuredSermon?: Sermon;
 }
 
 export default function Hero({ featuredSermon }: HeroProps) {
@@ -37,7 +38,7 @@ export default function Hero({ featuredSermon }: HeroProps) {
           <p className="mt-4 text-center text-sm text-muted sm:text-left">{HERO_COPY.note}</p>
         </div>
 
-        <HeroPreview sermon={featuredSermon} />
+        {featuredSermon && <HeroPreview sermon={featuredSermon} />}
       </Container>
     </section>
   );

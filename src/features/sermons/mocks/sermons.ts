@@ -1,17 +1,18 @@
 import type { Sermon } from "../types";
+import { mockCategories } from "./categories";
 
-// Placeholder catalogue until the sermons API exists. Preachers are fictional on purpose:
-// never attribute invented sermons to real ministers.
+// The catalogue from before the sermons API: still found (by their slug ids) in saved lists, history and notes
+// while those endpoints are mocked, and used by tests. Browse, Search, Home and the landing page show the API's.
+// Preachers are fictional on purpose: never attribute invented sermons to real ministers.
 export const sermons: Sermon[] = [
   {
     id: "arise-and-shine",
     title: "Arise and Shine",
     preacher: "Prophet Grace Mensah",
     scripture: "Isaiah 60:1",
-    durationMinutes: 38,
+    durationSeconds: 2280,
     language: "English",
-    topic: "purpose",
-    relatedTopics: ["calling", "faith"],
+    categories: mockCategories("hope-encouragement", "spiritual-growth", "faith-trust"),
     description:
       "A call to step out of discouragement and into the purpose God has prepared, drawn from Isaiah's promise of light after darkness.",
     scriptureRefs: ["Isaiah 60:2", "John 8:12"],
@@ -23,10 +24,9 @@ export const sermons: Sermon[] = [
     title: "Living by Faith",
     preacher: "Pastor Daniel Okafor",
     scripture: "Hebrews 11:1",
-    durationMinutes: 42,
+    durationSeconds: 2520,
     language: "English",
-    topic: "faith",
-    relatedTopics: ["purpose"],
+    categories: mockCategories("faith-trust", "christian-living"),
     description:
       "What it means to trust God for what you cannot yet see, walking through the heroes of faith in Hebrews 11.",
     scriptureRefs: ["Hebrews 11:6", "Romans 10:17"],
@@ -38,10 +38,9 @@ export const sermons: Sermon[] = [
     title: "The Power of Prayer",
     preacher: "Evangelist Esther Nwosu",
     scripture: "James 5:16",
-    durationMinutes: 45,
+    durationSeconds: 2700,
     language: "English",
-    topic: "prayer",
-    relatedTopics: ["faith"],
+    categories: mockCategories("prayer-worship", "faith-trust"),
     description:
       "Why the prayers of ordinary believers carry real weight, and how to pray with persistence and expectation.",
     scriptureRefs: ["Philippians 4:6", "Luke 18:1"],
@@ -53,10 +52,9 @@ export const sermons: Sermon[] = [
     title: "A House Built on the Rock",
     preacher: "Pastor Daniel Okafor",
     scripture: "Matthew 7:24",
-    durationMinutes: 47,
+    durationSeconds: 2820,
     language: "English",
-    topic: "family",
-    relatedTopics: ["faith"],
+    categories: mockCategories("love-relationships", "christian-living"),
     description:
       "Building a home that stands when storms come: hearing God's word together and putting it into practice.",
     scriptureRefs: ["Matthew 7:25", "Psalm 127:1"],
@@ -68,10 +66,9 @@ export const sermons: Sermon[] = [
     title: "Midnight Prayers, Morning Answers",
     preacher: "Evangelist Esther Nwosu",
     scripture: "Psalm 30:5",
-    durationMinutes: 39,
+    durationSeconds: 2340,
     language: "English",
-    topic: "prayer",
-    relatedTopics: ["faith", "worship"],
+    categories: mockCategories("prayer-worship", "hope-encouragement"),
     description:
       "Encouragement for the long night: holding on in prayer when answers are slow, and trusting that joy comes in the morning.",
     scriptureRefs: ["Luke 18:1"],
@@ -83,10 +80,9 @@ export const sermons: Sermon[] = [
     title: "The Voice That Calls You Out",
     preacher: "Prophet Grace Mensah",
     scripture: "1 Samuel 3:10",
-    durationMinutes: 56,
+    durationSeconds: 3360,
     language: "English",
-    topic: "calling",
-    relatedTopics: ["purpose", "prayer"],
+    categories: mockCategories("evangelism-discipleship", "leadership"),
     description:
       "Learning to recognise God's voice the way young Samuel did, and finding the courage to answer.",
     scriptureRefs: ["Jeremiah 1:5"],
@@ -98,10 +94,9 @@ export const sermons: Sermon[] = [
     title: "Faith That Moves Mountains",
     preacher: "Apostle Joseph Etim",
     scripture: "Mark 11:23",
-    durationMinutes: 51,
+    durationSeconds: 3060,
     language: "English",
-    topic: "faith",
-    relatedTopics: ["prayer"],
+    categories: mockCategories("faith-trust", "prayer-worship"),
     description:
       "Faith that speaks to obstacles instead of about them, from Jesus' teaching on the mountain that moves.",
     scriptureRefs: ["Matthew 17:20"],
@@ -113,10 +108,9 @@ export const sermons: Sermon[] = [
     title: "Created on Purpose",
     preacher: "Pastor Ruth Bamidele",
     scripture: "Jeremiah 29:11",
-    durationMinutes: 34,
+    durationSeconds: 2040,
     language: "English",
-    topic: "purpose",
-    relatedTopics: ["calling"],
+    categories: mockCategories("spiritual-growth", "hope-encouragement"),
     description:
       "You are not an accident: God's plans for you are for hope and a future, even in seasons of waiting.",
     scriptureRefs: ["Ephesians 2:10", "Jeremiah 1:5"],
@@ -128,10 +122,9 @@ export const sermons: Sermon[] = [
     title: "Here I Am, Send Me",
     preacher: "Apostle Joseph Etim",
     scripture: "Isaiah 6:8",
-    durationMinutes: 44,
+    durationSeconds: 2640,
     language: "English",
-    topic: "calling",
-    relatedTopics: ["purpose", "worship"],
+    categories: mockCategories("evangelism-discipleship", "leadership"),
     description:
       "Isaiah's answer to God's question, and what it looks like to make yourself available today.",
     scriptureRefs: ["Matthew 9:37"],
@@ -143,10 +136,9 @@ export const sermons: Sermon[] = [
     title: "A Heart of Worship",
     preacher: "Pastor Ruth Bamidele",
     scripture: "John 4:24",
-    durationMinutes: 36,
+    durationSeconds: 2160,
     language: "English",
-    topic: "worship",
-    relatedTopics: ["prayer"],
+    categories: mockCategories("prayer-worship", "holy-spirit"),
     description:
       "Worship as a way of life, in spirit and in truth, not only a song on Sunday morning.",
     scriptureRefs: ["John 4:23", "Psalm 95:6"],
@@ -158,10 +150,9 @@ export const sermons: Sermon[] = [
     title: "The Anchor of Hope",
     preacher: "Prophet Grace Mensah",
     scripture: "Hebrews 6:19",
-    durationMinutes: 41,
+    durationSeconds: 2460,
     language: "English",
-    topic: "faith",
-    relatedTopics: ["purpose"],
+    categories: mockCategories("hope-encouragement", "faith-trust"),
     description:
       "Hope as an anchor for the soul: steady footing when circumstances shift around you.",
     scriptureRefs: ["Romans 5:5"],
@@ -173,10 +164,9 @@ export const sermons: Sermon[] = [
     title: "Raising Children in the Way",
     preacher: "Pastor Daniel Okafor",
     scripture: "Proverbs 22:6",
-    durationMinutes: 48,
+    durationSeconds: 2880,
     language: "English",
-    topic: "family",
-    relatedTopics: ["prayer"],
+    categories: mockCategories("love-relationships", "christian-living"),
     description:
       "Practical, prayerful wisdom for parents shaping children who walk with God for life.",
     scriptureRefs: ["Deuteronomy 6:7"],
@@ -184,20 +174,3 @@ export const sermons: Sermon[] = [
     publishedAt: "2026-08-10",
   },
 ];
-
-const byId = (id: string) => {
-  const sermon = sermons.find((candidate) => candidate.id === id);
-  if (!sermon) throw new Error(`Unknown mock sermon: ${id}`);
-  return sermon;
-};
-
-// The landing page's hero and featured grid.
-export const featuredSermons: Sermon[] = [
-  "arise-and-shine",
-  "a-house-built-on-the-rock",
-  "midnight-prayers-morning-answers",
-  "the-voice-that-calls-you-out",
-].map(byId);
-
-// The app home's "For your listening" list.
-export const recommendedSermons: Sermon[] = ["arise-and-shine", "living-by-faith", "the-power-of-prayer", "created-on-purpose"].map(byId);

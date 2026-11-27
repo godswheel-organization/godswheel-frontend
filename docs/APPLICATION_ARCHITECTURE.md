@@ -57,8 +57,8 @@ godswheel-frontend/
     ├── app/                            # routing & layout only — no business logic
     │   ├── (public)/                   # marketing landing page "/" (service worker + install banner)
     │   ├── (app)/                      # the app: AppShell (sidebar ≥ md, bottom tabs on phones, mini player)
-    │   │   ├── home/                   # "/home" — featured sermon, topics, "For your listening"
-    │   │   ├── sermons/                # "/sermons" — Browse: search, topic chips, filter sheet, sort
+    │   │   ├── home/                   # "/home" — featured sermon, categories, "For your listening"
+    │   │   ├── sermons/                # "/sermons" — Browse: search, category chips, filter sheet, sort
     │   │   │   └── [id]/               # "/sermons/<id>" — sermon detail (server-rendered via getSermon)
     │   │   ├── search/                 # "/search" — Search: scope chips, results labelled by matched field
     │   │   ├── library/                # "/library" overview; saved/ and history/ sub-pages
@@ -201,20 +201,26 @@ in IndexedDB (database `godswheel-mock-api`). It is switched by `NEXT_PUBLIC_USE
 
 - **Demo account:** `ada.okafor@example.com` / `password123`, seeded with saved sermons, listening history and a
   note. New accounts made on the sign-up page work too. The sign-in page shows these details in mock mode.
-- **Routes:** each domain has a file in `mock/handlers/` (auth, sermons, library + history, notes, account,
-  Bible), answering the same paths the slices call. They double as a draft API contract for the backend team.
+- **Routes:** each domain still mocked has a file in `mock/handlers/` (auth, history, account, reports, Bible),
+  answering the same paths the slices call. The sermon catalogue, bookmarks, notes and playback progress are the
+  live API's, so they have no mock routes. The mocked history, export and reports find sermons through
+  `mock/sermonCatalog.ts`: the old mock catalogue by slug id, any real one with the live `GET /sermons/{id}`.
 - **Resetting:** delete the `godswheel-mock-api` IndexedDB database in DevTools (Application → IndexedDB);
   it is re-seeded on the next request.
 - **Tests:** `mock/router.test.ts` runs the handlers against an in-memory store.
 - **Switching to the real backend:** set `NEXT_PUBLIC_USE_MOCK_API=false` and point `NEXT_PUBLIC_API_BASE_URL`
   at it. The mock is loaded with a dynamic import, so in that build it sits in an unused chunk that browsers never download.
-  `features/sermons/server/getSermon.ts` (server-rendered detail page) still reads the catalogue directly and
-  needs its fetch written then.
 
 ### Sign-in and sessions (live API)
 
 - **Live endpoints:** sign-up, resend verification, verify email, login, `/auth/me`, logout, forgot
-  password, reset password and change password call the real GodsWheel API. Everything else is still the in-browser mock (`LIVE_ENDPOINTS` in `lib/api/baseQuery.ts`).
+  password, reset password, change password, log out everywhere (`POST /auth/logout-all`, in Settings), the
+  category and speaker lists, the sermon catalogue (`GET /sermons`, `GET /sermons/{id}`, `GET /sermons/{id}/audio`),
+  bookmarks (`GET /sermon-bookmarks`, `POST`/`DELETE /sermons/{id}/bookmark`), notes (`GET`/`PATCH
+  /sermons/{id}/note`) and playback progress (`GET`/`PUT /sermons/{id}/progress`) call the real GodsWheel API
+  (`LIVE_ENDPOINTS` in `lib/api/baseQuery.ts`). Still mocked, for want of endpoints: the listening-history list
+  (Recently played, Continue listening), settings (analytics consent), the data export, reports and the Bible
+  text. The legal pages keep their own text: `GET /legal/privacy` and `/legal/terms` return placeholders so far.
 - **Verify email:** the email's link opens `/verify-email?token=…` (confirm the path with the backend). The page
   spends the single-use token once, deduplicated per token because React runs effects twice in development. It
   then removes the token from the address bar and signs the user in with the returned session. Expired or used
@@ -239,34 +245,42 @@ in IndexedDB (database `godswheel-mock-api`). It is switched by `NEXT_PUBLIC_USE
 - **Guests make no auth calls:** no saved token, no request.
 - **Tabs stay in step:** `SessionWatcher` listens for `storage` events, so signing in or out in one tab updates
   the others (and clears per-user data when the person changes).
-- **Mock bridge:** mock endpoints use the real signed-in user's id (`mockBaseQuery`), so library, notes and
-  settings work for real accounts until those endpoints are integrated.
+- **Mock bridge:** mock endpoints use the real signed-in user's id (`mockBaseQuery`), so history, settings and the
+  export work for real accounts until those endpoints exist. (The export's saved sermons and notes come from the
+  mock, so they're empty now that those live in the API.)
 - **`useSession`** reports "loading" until hydration, because the server can't know the session.
 
 ### Player
 
 - `features/player/store/playerSlice.ts` holds what's playing and where (`positionSeconds`); the seek bar, ±15s,
   mini player and full player all read and write it.
-- `PlaybackEngine` (mounted once in the app layout) makes time pass: an `<audio>` element when a sermon has an
-  `audioUrl`, otherwise a one-second clock. For signed-in users it saves progress to listening history on start,
-  pause, finish and every 15 seconds; that feeds Continue listening and Recently played.
+- `PlaybackEngine` (mounted once in the app layout) makes time pass: an `<audio>` element for the API's sermons,
+  a one-second clock for the old mock ones. The audio address comes from `GET /sermons/{id}/audio`, presigned and
+  short-lived once storage is private, so a failing address is fetched again (once) and playback carries on
+  from the same position. A sermon started from a list also gets its full record merged in, for its passages.
+- **Progress:** for signed-in users it's saved on start, pause, finish and every 15 seconds, to the API
+  (`PUT /sermons/{id}/progress`, so any device can resume) and to this device's history list (Continue listening,
+  Recently played; the API has no list endpoint yet). A sermon started from the top asks `GET
+  /sermons/{id}/progress` first and picks up there ("Picking up at 10:00") if the position is past the first 15
+  seconds and short of the last 30; nothing is saved until that answer is in, so a save at 0:00 can't erase it.
 - Guests can listen; saving, sharing and notes open the app-wide account prompt
   (`dispatch(openAccountPrompt("save" | "share" | "note"))`).
 
 ### Notes
 
-- **One note per sermon**, at `/notes/:sermonId` (`GET`, `PUT` to create or replace, `DELETE`). A `404` from
-  `GET` means "no note yet" and reaches components as `null`.
+- **One note per sermon**, at `/sermons/{id}/note` (`GET`, and `PATCH { content }` to create or replace). The
+  API answers `null` for no note, and has no delete: a note is deleted by saving it empty, which reads back as
+  no note. The API doesn't keep the moment a note was written at, so notes aren't tied to a time in the sermon.
 - **Written like a Medium draft** (`features/notes/components/NoteSheet.tsx`). The sheet opens straight onto the
   note, with no Save, Edit or Add steps. Selecting text shows a format toolbar (bold, italic, heading,
   subheading, quote). Markdown shortcuts work too (`## `, `### `, `> `, `- `, `1. `, `**bold**`). Copy and Delete
   sit in a ⋯ menu.
 - **Autosave:** `hooks/useNoteAutosave.ts` saves once typing pauses for a second, flushes on close, and runs
   saves one at a time so they land in order. Erasing everything removes the note.
-- **Stored as JSON, never HTML.** A note sends `doc` (the editor's ProseMirror JSON) and `text` (plain text, for
-  previews, search and the export). The editor's schema is `lib/noteEditorExtensions.ts`. A doc it can't read,
-  or a note from before formatting existed, opens from its `text`. The 5,000-character limit counts the text
-  only, not the formatting.
+- **Stored as Markdown, never HTML.** The API keeps a note as one string, so `lib/noteMarkdown.ts` writes the
+  editor's document as Markdown (`## `, `### `, `> `, `- `, `1. `, `**bold**`, `*italic*`, `\` line breaks) and
+  reads it back. It stays readable as plain text for any other client. The editor's schema is
+  `lib/noteEditorExtensions.ts`. The 5,000-character limit counts the text only, not the formatting.
 
 ### SEO and link previews
 
@@ -277,7 +291,7 @@ in IndexedDB (database `godswheel-mock-api`). It is switched by `NEXT_PUBLIC_USE
   `noindex` and a `Disallow: /` robots.txt.
 - **`app/sitemap.ts`** lists the landing page, Browse, each category, every sermon, About and the legal pages.
   **`app/robots.ts`** keeps crawlers out of `/library` and `/settings`.
-- **Category pages are pages in their own right:** `/sermons?topic=faith` is titled "Faith sermons" and is its own
+- **Category pages are pages in their own right:** `/sermons?category=faith-trust` is titled "Faith & Trust sermons" and is its own
   canonical URL. Any other filter combination is `noindex` and points back at `/sermons`.
 - **Share images** are drawn with `next/og` (`lib/seo/ogImage.tsx`): `app/opengraph-image.tsx` for the site,
   `sermons/[id]/opengraph-image.tsx` per sermon. A route with its own image passes `ownImage: true`, because
@@ -287,15 +301,37 @@ in IndexedDB (database `godswheel-mock-api`). It is switched by `NEXT_PUBLIC_USE
 
 ### Sermon browsing
 
-- **The URL is the source of truth for Browse filters** (`?q=&topic=&speaker=&book=&sort=`), translated only by
-  `features/sermons/lib/sermonFilters.ts`. Filtered views can be shared and bookmarked, and the landing page's
-  topic links open Browse pre-filtered. Changes use `router.replace`, so typing doesn't fill the Back button.
-- **One matcher for every search.** `lib/searchSermons.ts` decides whether and where a sermon matches (title,
-  then speaker, then scripture, then topic); Browse filtering and the Search tab both use it.
-- **The detail page reads through `server/getSermon.ts`**, a Server Component data function wrapped in React
-  `cache()`; swap its body for a fetch when the API exists.
-- **`sermonsApi` answers from `mocks/sermons.ts` via `queryFn`** until the backend exists. Swap each `queryFn`
-  for a `query`; components use the generated hooks and won't change.
+- **Categories come from the API** (`GET /categories`, every page read). In the browser: `useGetCategoriesQuery`
+  (`sermonsApi`), kept for an hour, for Browse's chips, the filter sheet, Search and the sidebar shortcuts. On the
+  server: `features/sermons/server/getCategories.ts` for the landing grid, Home's chips, Browse's page titles and
+  the sitemap. Pages render per request, which turns off Next's fetch cache, so it keeps the list in memory for an
+  hour, times out after 2.5s, and falls back to the last good list. Icons and colours per slug live in
+  `lib/categories.ts`, with a fallback for categories the API adds later.
+- **Sermons come from the API.** `lib/apiSermon.ts` holds the API's record types and `toSermon()`, which turns
+  them into the app's `Sermon`. `GET /sermons` lists summaries (title, speaker, categories, length, date); the
+  passages, language, description and audio come only with `GET /sermons/{id}`, so those fields are optional and
+  every view copes without them. Sermons carry `categories: { id, slug, name }[]` (the first is the main one).
+- **The URL is the source of truth for Browse filters** (`?q=&category=&speaker=&book=&sort=`: category by slug,
+  speaker by id, book by name, sort `newest` or `oldest`), translated only by `features/sermons/lib/sermonFilters.ts`.
+  `sermonListParams()` turns them into `GET /sermons`'s query (`search`, `category_id` looked up from the
+  categories, `speaker_id`, `scripture`, `sort`). Old `?topic=` links (the six pre-API topics) are sent to the
+  closest category, and old sorts (`relevance`, `shortest`) to `newest`. Changes use `router.replace`, so typing
+  doesn't fill the Back button.
+- **Browse pages through the list** with an RTK Query infinite query (`useGetSermonsInfiniteQuery`, 20 a page,
+  "Load more"). The speaker filter lists `GET /speakers`; the scripture filter lists all 66 books
+  (`lib/bibleBooks.ts`), since the API has no list of the books its sermons cite.
+- **The Search tab** (`searchSermons` in `sermonsApi`) runs the API's `search` (titles and descriptions), matches
+  speakers by name and filters by their id, and asks the `scripture` filter when the words look like a passage.
+  Results say where they matched, title matches first.
+- **The detail page reads through `server/getSermon.ts`** (`GET /sermons/{id}` on the server, in React `cache()`):
+  404 gives the not-found page, other failures the error page. The mock catalogue's slug ids are still found
+  there while the mock is on (saved lists and history may hold them). The same file gives Home and the landing
+  page the newest sermons (kept five minutes) and the sitemap every sermon (kept an hour).
+- **Playing a sermon from a list:** the player starts with the summary, and `PlaybackEngine` fetches its full
+  record (`useGetSermonQuery`) for the passages and its audio address (`useGetSermonAudioQuery`). Audio plays
+  from wherever that points (Amazon S3 today), which the CSP allows with `media-src 'self' https:` (`src/proxy.ts`).
+- **Saved sermons are the API's bookmarks** (`libraryApi`: every page of `GET /sermon-bookmarks`). The API doesn't
+  say when each was saved, so Saved sorts by publish date, after any saved in this session.
 - **Shared components must not import from `features/`.** `AppShell` takes the account button and mini player
   as props from `app/(app)/layout.tsx` for that reason.
 

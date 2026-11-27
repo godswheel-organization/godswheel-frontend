@@ -6,6 +6,7 @@ import type { Sermon } from "@/features/sermons/types";
 import { ROUTES } from "@/lib/routes";
 import Button from "@/shared/ui/button/Button";
 import { HOME_COPY } from "../content";
+import { primaryCategory } from "@/features/sermons/lib/categories";
 
 // Two half-width buttons must each fit one line on a 360px phone.
 const PHONE_FIT = "whitespace-nowrap px-3 text-[0.9375rem] sm:px-7 sm:text-base";
@@ -25,10 +26,10 @@ export default function FeaturedSermonCard({ sermon }: FeaturedSermonCardProps) 
 
       <div className="relative">
         <div className="flex items-start gap-4">
-          <SermonArtwork topic={sermon.topic} className="size-20 shrink-0 md:hidden" iconClassName="size-7" />
+          <SermonArtwork category={primaryCategory(sermon)?.slug} className="size-20 shrink-0 md:hidden" iconClassName="size-7" />
           <div className="min-w-0 pt-1">
-            <p className="text-sm text-muted">{HOME_COPY.featuredLabel}</p>
-            <h2 id="featured-sermon-title" className="mt-1 text-2xl font-semibold text-foreground md:font-serif md:text-4xl">
+            <p className="text-sm text-muted">{HOME_COPY.latestLabel}</p>
+            <h2 id="featured-sermon-title" className="mt-1 text-xl font-semibold leading-snug text-foreground md:font-serif md:text-3xl">
               {sermon.title}
             </h2>
             <p className="mt-1 text-muted">{sermon.preacher}</p>
@@ -51,7 +52,7 @@ export default function FeaturedSermonCard({ sermon }: FeaturedSermonCardProps) 
         </div>
       </div>
 
-      <SermonArtwork topic={sermon.topic} className="relative hidden aspect-square w-full rounded-2xl md:flex" iconClassName="size-16" />
+      <SermonArtwork category={primaryCategory(sermon)?.slug} className="relative hidden aspect-square w-full rounded-2xl md:flex" iconClassName="size-16" />
     </section>
   );
 }

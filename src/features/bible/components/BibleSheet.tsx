@@ -27,8 +27,17 @@ export default function BibleSheet({ open, onOpenChange, sermon }: BibleSheetPro
 
 // Mounts with the sheet, so it always opens on the sermon's main passage.
 function BibleReader({ sermon }: { sermon: Sermon }) {
-  const references = [sermon.scripture, ...(sermon.scriptureRefs ?? [])];
-  const [reference, setReference] = useState(references[0]);
+  const references = [sermon.scripture, ...(sermon.scriptureRefs ?? [])].filter((ref): ref is string => Boolean(ref));
+  // A sermon started from a list gets its passages a moment after it starts (see PlaybackEngine), or none at all.
+  if (references.length === 0) {
+    return <p className="rounded-2xl bg-ink/40 p-5 text-muted">This sermon doesn&rsquo;t list its passages yet.</p>;
+  }
+  return <PassageReader references={references} />;
+}
+
+function PassageReader({ references }: { references: string[] }) {
+  const [picked, setPicked] = useState<string>();
+  const reference = picked && references.includes(picked) ? picked : references[0];
   const { data: versions } = useGetBibleVersionsQuery();
   const [version, setVersion] = useState("KJV");
   const { data: passage, isFetching, isError } = useGetPassageQuery({ reference, version });
@@ -42,7 +51,7 @@ function BibleReader({ sermon }: { sermon: Sermon }) {
         <ul className="mt-3 flex flex-wrap gap-2">
           {references.map((ref) => (
             <li key={ref}>
-              <ChipButton pressed={ref === reference} onClick={() => setReference(ref)}>
+              <ChipButton pressed={ref === reference} onClick={() => setPicked(ref)}>
                 {ref}
               </ChipButton>
             </li>

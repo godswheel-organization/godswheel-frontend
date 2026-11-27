@@ -57,10 +57,10 @@ const httpBaseQuery: AppBaseQuery = fetchBaseQuery({
 const mockBaseQuery: AppBaseQuery = async (args, api, extraOptions) =>
   (await import("./mock/mockBaseQuery")).mockBaseQuery(args, api, extraOptions);
 
-// Endpoints already integrated with the real GodsWheel API, as "METHOD /path" (relative to the API base URL).
-// They call the API even while the mock answers everything else. Add each endpoint here as it's wired up;
-// once all are, set NEXT_PUBLIC_USE_MOCK_API=false and delete the mock.
-export const LIVE_ENDPOINTS = new Set([
+// Endpoints already integrated with the real GodsWheel API, as "METHOD /path" (relative to the API base URL);
+// ":name" stands for one path segment. They call the API even while the mock answers everything else. Add each
+// endpoint here as it's wired up; once all are, set NEXT_PUBLIC_USE_MOCK_API=false and delete the mock.
+export const LIVE_ENDPOINTS = [
   "POST /auth/signup",
   "POST /auth/resend-verification",
   "POST /auth/login",
@@ -70,12 +70,30 @@ export const LIVE_ENDPOINTS = new Set([
   "PUT /auth/change-password",
   "GET /auth/me",
   "POST /auth/logout",
-]);
+  "POST /auth/logout-all",
+  "GET /categories",
+  "GET /speakers",
+  "GET /sermons",
+  "GET /sermons/:id",
+  "GET /sermons/:id/audio",
+  "GET /sermon-bookmarks",
+  "POST /sermons/:id/bookmark",
+  "DELETE /sermons/:id/bookmark",
+  "GET /sermons/:id/note",
+  "PATCH /sermons/:id/note",
+  "GET /sermons/:id/progress",
+  "PUT /sermons/:id/progress",
+];
+
+const LIVE_ENDPOINT_PATTERNS = LIVE_ENDPOINTS.map(
+  (endpoint) => new RegExp(`^${endpoint.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/:[A-Za-z]+/g, "[^/]+")}$`)
+);
 
 export function isLiveEndpoint(args: string | FetchArgs): boolean {
   const url = typeof args === "string" ? args : args.url;
   const method = (typeof args === "string" ? "GET" : (args.method ?? "GET")).toUpperCase();
-  return LIVE_ENDPOINTS.has(`${method} ${url.split("?")[0]}`);
+  const endpoint = `${method} ${url.split("?")[0]}`;
+  return LIVE_ENDPOINT_PATTERNS.some((pattern) => pattern.test(endpoint));
 }
 
 const hybridBaseQuery: AppBaseQuery = (args, api, extraOptions) =>

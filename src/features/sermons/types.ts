@@ -1,50 +1,72 @@
-// TODO(backend): replace with the real sermon contract once the Godswheel API spec is available.
-export type SermonTopic = "purpose" | "calling" | "faith" | "prayer" | "family" | "worship";
+// A sermon category, from GET /categories (live). The list is the API's, so it can change without a release.
+export interface SermonCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+}
 
+// How a sermon names its categories, as the API's sermons do.
+export type CategoryRef = Pick<SermonCategory, "id" | "name" | "slug">;
+
+// A sermon as the app shows it, made from the API's records by toSermon() (lib/apiSermon.ts).
+// GET /sermons lists summaries, so several fields only arrive with the full record (GET /sermons/{id}):
+// code reading them handles their absence.
 export interface Sermon {
   id: string;
   title: string;
+  // The speaker's name.
   preacher: string;
-  scripture: string;
-  durationMinutes: number;
-  language: string;
-  // The main topic (cover art, the card's label); relatedTopics are extra tags on the detail page.
-  topic: SermonTopic;
-  relatedTopics?: SermonTopic[];
-  description: string;
+  speakerId?: string;
+  // The first is the main one (cover art, the card's label); the rest are extra tags on the detail page.
+  categories: CategoryRef[];
+  // ISO date or date-time the sermon was published.
+  publishedAt?: string;
+  durationSeconds?: number;
+  thumbnailUrl?: string;
+  // ---- Full record only ----
+  // The main passage, e.g. "Matthew 5:27-30".
+  scripture?: string;
   // Further passages the sermon draws on (the Bible sheet's "In this sermon"), after `scripture` itself.
   scriptureRefs?: string[];
-  // Who published it and on what terms, shown under "Source and rights".
-  source: { name: string; rights: string };
-  // ISO date (YYYY-MM-DD) the sermon was published, for "Newest" sorting and the detail page.
-  publishedAt: string;
-  // Absent until the API serves audio; the player shows the sermon but cannot play it.
+  language?: string;
+  description?: string;
   audioUrl?: string;
+  // Who published it and on what terms, shown under "Source and rights". The API doesn't send this yet.
+  source?: { name: string; rights: string };
 }
 
-export type SermonSort = "relevance" | "newest" | "shortest";
+// A speaker, from GET /speakers (live).
+export interface Speaker {
+  id: string;
+  name: string;
+  bio?: string;
+  imageUrl?: string;
+}
+
+// The orders GET /sermons offers.
+export type SermonSort = "newest" | "oldest";
 
 export interface SermonFilters {
   q?: string;
-  topic?: SermonTopic;
+  // A category slug (?category=).
+  category?: string;
+  // A speaker id (?speaker=).
   speaker?: string;
   // Book of the Bible, e.g. "Hebrews" or "1 Samuel".
   book?: string;
   sort: SermonSort;
 }
 
-export interface SermonsResponse {
+// One page of GET /sermons.
+export interface SermonPage {
   items: Sermon[];
   total: number;
+  hasNextPage: boolean;
 }
 
-export interface SermonFilterOptions {
-  speakers: string[];
-  books: string[];
-}
-
-// Search results (the Search tab) say which field matched: title, speaker, scripture or topic.
-export type MatchField = "title" | "speaker" | "scripture" | "topic";
+// Search results (the Search tab) say which field matched.
+export type MatchField = "title" | "description" | "speaker" | "scripture";
 
 // What the Search tab's chips limit a search to.
 export type SearchScope = "all" | "speaker" | "scripture";

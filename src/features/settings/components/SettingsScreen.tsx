@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { UserRound } from "lucide-react";
-import { useSignOutMutation } from "@/features/auth/api/authApi";
+import { useSignOutEverywhereMutation, useSignOutMutation } from "@/features/auth/api/authApi";
 import SignInGate from "@/features/auth/components/account-prompt/SignInGate";
 import { useSession } from "@/features/auth/hooks/useSession";
 import { useClearHistoryMutation } from "@/features/library/api/libraryApi";
@@ -142,7 +142,22 @@ function SignOutButton() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [signOut, { isLoading }] = useSignOutMutation();
+  const [signOutEverywhere, { isLoading: isSigningOutEverywhere }] = useSignOutEverywhereMutation();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmEverywhereOpen, setConfirmEverywhereOpen] = useState(false);
+
+  const handleSignOutEverywhere = async () => {
+    try {
+      await signOutEverywhere().unwrap();
+    } catch {
+      toast.error("Couldn't sign out your other devices. Check your connection and try again.");
+      return;
+    }
+    setConfirmEverywhereOpen(false);
+    clearUserData(dispatch);
+    toast.success("Signed out on all your devices");
+    router.replace(ROUTES.home);
+  };
 
   const handleSignOut = async () => {
     // Even if the server can't be reached, forget everything on this device.
@@ -168,6 +183,24 @@ function SignOutButton() {
         confirmLabel={isLoading ? "Signing out…" : "Sign out"}
         onConfirm={handleSignOut}
         busy={isLoading}
+        tone="default"
+      />
+
+      <button
+        type="button"
+        onClick={() => setConfirmEverywhereOpen(true)}
+        className="mx-auto mt-4 block text-sm text-muted underline underline-offset-4 transition hover:text-foreground"
+      >
+        Sign out on all devices
+      </button>
+      <ConfirmSheet
+        open={confirmEverywhereOpen}
+        onOpenChange={setConfirmEverywhereOpen}
+        title="Sign out on all devices?"
+        message="Every phone, tablet and browser signed in to your account will be signed out, this one included. Your library and notes stay in your account."
+        confirmLabel={isSigningOutEverywhere ? "Signing out…" : "Sign out everywhere"}
+        onConfirm={handleSignOutEverywhere}
+        busy={isSigningOutEverywhere}
         tone="default"
       />
     </>
