@@ -7,7 +7,7 @@ import HowItWorks from "@/features/landing/components/HowItWorks";
 import MissionStatement from "@/features/landing/components/MissionStatement";
 import TopicGrid from "@/features/landing/components/TopicGrid";
 import { LANDING_NAV } from "@/features/landing/content";
-import { featuredSermons } from "@/features/sermons/mocks/sermons";
+import { getLatestSermons } from "@/features/sermons/server/getSermon";
 import SiteFooter from "@/shared/layouts/SiteFooter";
 import SiteHeader from "@/shared/layouts/SiteHeader";
 import InstallGuideOnArrival from "@/shared/pwa/install/InstallGuideOnArrival";
@@ -47,7 +47,10 @@ const SITE_JSON_LD = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  // The newest sermons: the first shows in the hero's player, all four in the featured grid.
+  const latest = await getLatestSermons(4);
+
   return (
     <div className="flex min-h-screen flex-col">
       <JsonLd data={SITE_JSON_LD} />
@@ -55,9 +58,9 @@ export default function Home() {
       <InstallGuideOnArrival />
       <SiteHeader nav={LANDING_NAV} actions={<SiteHeaderActions />} />
       <main className="flex-1">
-        <Hero featuredSermon={featuredSermons[0]} />
+        <Hero featuredSermon={latest[0]} />
         <TopicGrid />
-        <FeaturedSermons sermons={featuredSermons} />
+        {latest.length > 0 && <FeaturedSermons sermons={latest} />}
         <HowItWorks />
         <MissionStatement />
         <ClosingCta />

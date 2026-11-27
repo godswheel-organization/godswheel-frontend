@@ -32,6 +32,7 @@ import { useReturnFocus } from "@/shared/ui/modal/useReturnFocus";
 import { closePlayer, durationOf, setExpanded, skipBy, togglePlayback } from "../store/playerSlice";
 import PlayerAction from "./PlayerAction";
 import SeekBar from "./SeekBar";
+import { primaryCategory } from "@/features/sermons/lib/categories";
 
 const SKIP_SECONDS = 15;
 
@@ -65,7 +66,6 @@ function NowPlaying({ sermon }: { sermon: Sermon }) {
   const share = useShareSermon(sermon);
   const [openSheet, setOpenSheet] = useState<"bible" | "note" | "more" | null>(null);
   // Fixed when the note sheet opens, so "at 12:48" doesn't keep moving while you type.
-  const [noteAt, setNoteAt] = useState(0);
   const duration = durationOf(sermon);
   const PlayIcon = isPlaying ? Pause : Play;
 
@@ -79,7 +79,6 @@ function NowPlaying({ sermon }: { sermon: Sermon }) {
       dispatch(openAccountPrompt("note"));
       return;
     }
-    setNoteAt(positionSeconds);
     setOpenSheet("note");
   };
 
@@ -103,7 +102,7 @@ function NowPlaying({ sermon }: { sermon: Sermon }) {
         </button>
       </header>
 
-      <SermonArtwork topic={sermon.topic} className="mx-auto mt-6 aspect-square w-full max-w-80 rounded-2xl" iconClassName="size-14" />
+      <SermonArtwork category={primaryCategory(sermon)?.slug} className="mx-auto mt-6 aspect-square w-full max-w-80 rounded-2xl" iconClassName="size-14" />
 
       <div className="mt-8 text-center">
         <p className="text-2xl font-semibold text-foreground">{sermon.title}</p>
@@ -163,7 +162,6 @@ function NowPlaying({ sermon }: { sermon: Sermon }) {
         open={openSheet === "note"}
         onOpenChange={(open) => setOpenSheet(open ? "note" : null)}
         sermon={sermon}
-        atSeconds={noteAt}
       />
       <Sheet open={openSheet === "more"} onOpenChange={(open) => setOpenSheet(open ? "more" : null)} title="More">
         <ul className="flex flex-col gap-2">

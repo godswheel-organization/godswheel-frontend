@@ -1,5 +1,3 @@
-// TODO(backend): replace with the real notes contract once the Godswheel API spec is available.
-
 // A note's formatted body, stored as the editor's JSON document (ProseMirror/Tiptap shape):
 // paragraphs, headings, quotes and lists, with bold/italic marks. Never HTML, so there's nothing to sanitise.
 export type NoteDocNode = {
@@ -11,13 +9,11 @@ export type NoteDocNode = {
 };
 export type NoteDoc = NoteDocNode & { type: "doc" };
 
-// One note per sermon, per listener.
+// One note per sermon, per listener (GET /sermons/{id}/note). The API stores the body as Markdown.
 export interface SermonNote {
   id: string;
   sermonId: string;
-  // The moment in the sermon the note was first written at, in seconds. Editing keeps it.
-  atSeconds: number;
-  // The note as plain text: for previews, search and the data export.
+  // The note as plain text: for previews and copying.
   text: string;
   // The formatted note. Missing on notes written before formatting existed: those are built from `text`.
   doc?: NoteDoc;
@@ -28,7 +24,6 @@ export interface SermonNote {
 
 export interface SaveNoteRequest {
   sermonId: string;
-  atSeconds: number;
   text: string;
   doc: NoteDoc;
 }

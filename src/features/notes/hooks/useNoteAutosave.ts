@@ -18,14 +18,12 @@ interface Options {
   sermonId: string;
   // Whether the sermon already has a note as the editor opens.
   hasNote: boolean;
-  // The moment the note is for (it changes when a deleted note is started again).
-  atSeconds: number;
 }
 
 // Medium-style saving: no Save button. Each change is saved once typing pauses, and anything still
 // waiting is saved when the editor closes. Saves run one at a time, in order, so a slow request can
 // never land after (and undo) a newer one. Erasing everything removes the note.
-export function useNoteAutosave({ sermonId, hasNote, atSeconds }: Options) {
+export function useNoteAutosave({ sermonId, hasNote }: Options) {
   const [saveNote] = useSaveNoteMutation();
   const [deleteNote] = useDeleteNoteMutation();
   const [status, setStatus] = useState<AutosaveStatus>(hasNote ? "saved" : "empty");
@@ -34,11 +32,6 @@ export function useNoteAutosave({ sermonId, hasNote, atSeconds }: Options) {
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const queue = useRef<Promise<void>>(Promise.resolve());
   const stored = useRef(hasNote);
-  // Read when a save runs, which can be after a re-render.
-  const moment = useRef(atSeconds);
-  useEffect(() => {
-    moment.current = atSeconds;
-  }, [atSeconds]);
 
   const flush = useCallback(() => {
     clearTimeout(timer.current);
@@ -50,7 +43,7 @@ export function useNoteAutosave({ sermonId, hasNote, atSeconds }: Options) {
       setStatus("saving");
       try {
         if (draft.text) {
-          await saveNote({ sermonId, atSeconds: Math.round(moment.current), ...draft }).unwrap();
+          await saveNote({ sermonId, ...draft }).unwrap();
           stored.current = true;
         } else if (stored.current) {
           await deleteNote(sermonId).unwrap();

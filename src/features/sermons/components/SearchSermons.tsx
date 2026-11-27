@@ -7,9 +7,8 @@ import { ROUTES } from "@/lib/routes";
 import Chip from "@/shared/ui/chip/Chip";
 import ChipRow from "@/shared/ui/chip/ChipRow";
 import Container from "@/shared/ui/container/Container";
-import { useSearchSermonsQuery } from "../api/sermonsApi";
+import { useGetCategoriesQuery, useSearchSermonsQuery } from "../api/sermonsApi";
 import { parseSearchQuery, SEARCH_SCOPES, toSearchQueryParams, type SearchQuery } from "../lib/searchQuery";
-import { TOPIC_ORDER, TOPICS } from "../lib/topics";
 import type { MatchField } from "../types";
 import SermonListItem from "./SermonListItem";
 import SermonListSkeleton from "./SermonListSkeleton";
@@ -19,7 +18,7 @@ const MATCH_LABELS: Record<MatchField, string> = {
   title: "Matched in title",
   speaker: "Matched in speaker",
   scripture: "Matched in scripture",
-  topic: "Matched in category",
+  description: "Matched in description",
 };
 
 // The Search tab. Like Browse, the URL (?q=&in=) is the only state: the box and chips write it, results read it.
@@ -30,6 +29,7 @@ export default function SearchSermons() {
 
   const query = useMemo(() => parseSearchQuery(new URLSearchParams(searchParams.toString())), [searchParams]);
   const { data } = useSearchSermonsQuery(query, { skip: !query.q });
+  const { data: categories } = useGetCategoriesQuery();
 
   const hrefFrom = useCallback(
     (base: SearchQuery, changes: Partial<SearchQuery>) => {
@@ -112,15 +112,15 @@ export default function SearchSermons() {
           )}
         </section>
       ) : (
-        // Before anything is typed: a nudge, and topics as a way in.
+        // Before anything is typed: a nudge, and the categories as a way in.
         <section aria-labelledby="search-suggestions-title" className="mt-10">
           <h2 id="search-suggestions-title" className="text-sm font-medium text-muted">
             Or start with a category
           </h2>
           <ChipRow label="Categories" className="mt-4">
-            {TOPIC_ORDER.map((topic) => (
-              <li key={topic}>
-                <Chip href={ROUTES.sermonsByTopic(topic)}>{TOPICS[topic].label}</Chip>
+            {categories?.map((category) => (
+              <li key={category.slug}>
+                <Chip href={ROUTES.sermonsByCategory(category.slug)}>{category.name}</Chip>
               </li>
             ))}
           </ChipRow>

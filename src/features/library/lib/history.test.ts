@@ -4,7 +4,7 @@ import type { HistoryEntry } from "../types";
 import { groupByDay, latestUnfinished, progressOf, timeLeftLabel } from "./history";
 
 // A 38-minute sermon.
-const sermon = testSermon({ id: "s", durationMinutes: 38 });
+const sermon = testSermon({ id: "s", durationSeconds: 38 * 60 });
 const entry = (overrides: Partial<HistoryEntry>): HistoryEntry => ({
   sermon,
   positionSeconds: 0,

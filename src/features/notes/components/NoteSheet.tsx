@@ -3,10 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
-import { seekTo } from "@/features/player/store/playerSlice";
-import { formatPlaybackTime } from "@/features/sermons/lib/formatSermon";
 import type { Sermon } from "@/features/sermons/types";
-import { useAppDispatch } from "@/lib/store";
 import { cn } from "@/lib/utils/cn";
 import Button from "@/shared/ui/button/Button";
 import Sheet, { SheetTitle } from "@/shared/ui/modal/Sheet";
@@ -23,21 +20,19 @@ interface NoteSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sermon: Sermon;
-  // Where playback is as the sheet opens: the moment a new note is for.
-  atSeconds: number;
 }
 
 // One note per sermon, written like a Medium draft: straight onto the page, saved as you type,
 // formatted from a toolbar over selected text, with Copy and Delete in a ⋯ menu.
-export default function NoteSheet({ open, onOpenChange, sermon, atSeconds }: NoteSheetProps) {
+export default function NoteSheet({ open, onOpenChange, sermon }: NoteSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <NotePanel sermon={sermon} atSeconds={atSeconds} onDone={() => onOpenChange(false)} />
+      <NotePanel sermon={sermon} onDone={() => onOpenChange(false)} />
     </Sheet>
   );
 }
 
-function NotePanel({ sermon, atSeconds, onDone }: { sermon: Sermon; atSeconds: number; onDone: () => void }) {
+function NotePanel({ sermon, onDone }: { sermon: Sermon; onDone: () => void }) {
   const { data: note, isLoading } = useGetNoteQuery(sermon.id);
 
   if (isLoading || note === undefined) {
@@ -54,29 +49,14 @@ function NotePanel({ sermon, atSeconds, onDone }: { sermon: Sermon; atSeconds: n
   }
 
   // Mounted once the note is known, so the editor starts from it (and later saves don't reset it).
-  return <NoteEditor sermon={sermon} note={note} atSeconds={atSeconds} onDone={onDone} />;
+  return <NoteEditor sermon={sermon} note={note} onDone={onDone} />;
 }
 
-function Heading({ sermon, moment, onJump }: { sermon: Sermon; moment?: number; onJump?: () => void }) {
+function Heading({ sermon }: { sermon: Sermon }) {
   return (
     <div className="pr-14">
       <SheetTitle className="font-serif text-2xl text-foreground">Your note</SheetTitle>
-      <p className="mt-1.5 text-sm text-muted">
-        {sermon.title}
-        {moment !== undefined && (
-          <>
-            {" · "}
-            <button
-              type="button"
-              onClick={onJump}
-              aria-label={`Play from ${formatPlaybackTime(moment)}`}
-              className="font-medium text-brand-500 underline-offset-4 hover:underline"
-            >
-              at {formatPlaybackTime(moment)}
-            </button>
-          </>
-        )}
-      </p>
+      <p className="mt-1.5 text-sm text-muted">{sermon.title}</p>
     </div>
   );
 }
@@ -84,18 +64,14 @@ function Heading({ sermon, moment, onJump }: { sermon: Sermon; moment?: number; 
 interface NoteEditorProps {
   sermon: Sermon;
   note: SermonNote | null;
-  atSeconds: number;
   onDone: () => void;
 }
 
-function NoteEditor({ sermon, note, atSeconds, onDone }: NoteEditorProps) {
-  const dispatch = useAppDispatch();
-  // A note stays tied to the moment it was first written; a new one is for where playback is now.
-  const [moment, setMoment] = useState(note?.atSeconds ?? atSeconds);
+function NoteEditor({ sermon, note, onDone }: NoteEditorProps) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const autosave = useNoteAutosave({ sermonId: sermon.id, hasNote: Boolean(note), atSeconds: moment });
+  const autosave = useNoteAutosave({ sermonId: sermon.id, hasNote: Boolean(note) });
 
   // Worked out once, for the editor's starting content.
   const [initialContent] = useState(() => {
@@ -132,11 +108,6 @@ function NoteEditor({ sermon, note, atSeconds, onDone }: NoteEditorProps) {
       selector: ({ editor: current }) => (current ? (current.storage.characterCount.characters() as number) : 0),
     }) ?? 0;
 
-  const jump = () => {
-    dispatch(seekTo(moment));
-    onDone();
-  };
-
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(editor?.getText({ blockSeparator: "\n\n" }).trim() ?? "");
@@ -151,7 +122,6 @@ function NoteEditor({ sermon, note, atSeconds, onDone }: NoteEditorProps) {
     try {
       await autosave.remove();
       editor?.commands.clearContent(false);
-      setMoment(atSeconds);
       setConfirmingDelete(false);
       toast.success("Note deleted");
       editor?.commands.focus();
@@ -166,7 +136,7 @@ function NoteEditor({ sermon, note, atSeconds, onDone }: NoteEditorProps) {
 
   return (
     <>
-      <Heading sermon={sermon} moment={moment} onJump={jump} />
+      <Heading sermon={sermon} />
 
       {/* Medium's draft bar: save state on the left, ⋯ on the right. */}
       <div className="mt-5 flex items-center justify-between gap-3 border-b border-border pb-2">

@@ -3,9 +3,11 @@
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchX, SlidersHorizontal } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
 import Button from "@/shared/ui/button/Button";
 import Container from "@/shared/ui/container/Container";
-import { useGetSermonsQuery } from "../api/sermonsApi";
+import { useGetCategoriesQuery, useGetSermonsInfiniteQuery } from "../api/sermonsApi";
+import { sermonListParams } from "../lib/apiSermon";
 import { hasActiveFilters, parseSermonFilters, toSermonSearchParams } from "../lib/sermonFilters";
 import type { SermonFilters } from "../types";
 import ActiveFilters from "./ActiveFilters";
@@ -14,9 +16,9 @@ import ResultsBar from "./ResultsBar";
 import SermonListItem from "./SermonListItem";
 import SermonListSkeleton from "./SermonListSkeleton";
 import SermonSearchInput from "./SermonSearchInput";
-import TopicChips from "./TopicChips";
+import CategoryChips from "./CategoryChips";
 
-const NO_FILTERS = { topic: undefined, speaker: undefined, book: undefined } as const;
+const NO_FILTERS = { category: undefined, speaker: undefined, book: undefined } as const;
 
 interface BrowseSermonsProps {
   title: string;
@@ -31,7 +33,24 @@ export default function BrowseSermons({ title }: BrowseSermonsProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const filters = useMemo(() => parseSermonFilters(new URLSearchParams(searchParams.toString())), [searchParams]);
-  const { data, isError, refetch } = useGetSermonsQuery(filters);
+  const { data: categories, isError: categoriesFailed, refetch: refetchCategories } = useGetCategoriesQuery();
+  // The API filters by category id, so a ?category= slug waits for the categories; one that isn't among them
+  // matches nothing (null), without asking the API.
+  const params = useMemo(
+    () => (filters.category && !categories ? undefined : sermonListParams(filters, categories ?? [])),
+    [filters, categories]
+  );
+  const sermons = useGetSermonsInfiniteQuery(params ?? {}, { skip: !params });
+  // 422: the API couldn't read a filter (it rejects numbered books, "1 Samuel", for now). Nothing can match it.
+  const unreadable = sermons.error && "status" in sermons.error && sermons.error.status === 422;
+  const pages = params === null || unreadable ? [] : sermons.data?.pages;
+  const data = pages && { items: pages.flatMap((page) => page.items), total: pages[0]?.total ?? 0 };
+  // New filters: the previous results stay up, dimmed, until the new ones arrive.
+  const refreshing = sermons.isFetching && !sermons.isFetchingNextPage && !unreadable;
+  // A failed "Load more" keeps the list and says so under it; this is for when there's no list to show.
+  const isError =
+    (sermons.isError && !sermons.isFetchNextPageError && !unreadable) || (Boolean(filters.category) && categoriesFailed);
+  const refetch = () => (sermons.isError ? sermons.refetch() : refetchCategories());
 
   const hrefFrom = useCallback(
     (base: SermonFilters, changes: Partial<SermonFilters>) => {
@@ -40,7 +59,7 @@ export default function BrowseSermons({ title }: BrowseSermonsProps) {
     },
     [pathname]
   );
-  // For links rendered now (the topic chips).
+  // For links rendered now (the category chips).
   const hrefWith = (changes: Partial<SermonFilters>) => hrefFrom(filters, changes);
 
   // For changes that may run later than the render that created them (the search box fires 300ms after
@@ -51,7 +70,7 @@ export default function BrowseSermons({ title }: BrowseSermonsProps) {
     router.replace(hrefFrom(current, changes), { scroll: false });
   };
 
-  const sheetFilterCount = [filters.topic, filters.speaker, filters.book].filter(Boolean).length;
+  const sheetFilterCount = [filters.category, filters.speaker, filters.book].filter(Boolean).length;
 
   return (
     <Container className="py-6 md:py-10">
@@ -75,7 +94,13 @@ export default function BrowseSermons({ title }: BrowseSermonsProps) {
         </button>
       </div>
 
-      <TopicChips className="mt-6" activeTopic={filters.topic} hrefFor={(topic) => hrefWith({ topic })} scroll={false} />
+      <CategoryChips
+        className="mt-6"
+        categories={categories}
+        activeCategory={filters.category}
+        hrefFor={(slug) => hrefWith({ category: slug })}
+        scroll={false}
+      />
 
       {hasActiveFilters(filters) && (
         <ActiveFilters
@@ -87,7 +112,7 @@ export default function BrowseSermons({ title }: BrowseSermonsProps) {
       )}
 
       <section aria-label="Results" className="mt-8">
-        <ResultsBar total={data?.total} sort={filters.sort} onSortChange={(sort) => update({ sort })} />
+        <ResultsBar total={refreshing ? undefined : data?.total} sort={filters.sort} onSortChange={(sort) => update({ sort })} />
 
         {isError && (
           <div className="mt-6 flex flex-col items-start gap-4 rounded-2xl border border-border p-6">
@@ -101,16 +126,38 @@ export default function BrowseSermons({ title }: BrowseSermonsProps) {
         {!data && !isError && <SermonListSkeleton className="mt-4 lg:grid-cols-2" count={4} />}
 
         {data && data.items.length > 0 && (
-          <ul className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
-            {data.items.map((sermon) => (
-              <li key={sermon.id}>
-                <SermonListItem sermon={sermon} />
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul
+              aria-busy={refreshing}
+              className={cn("mt-4 grid grid-cols-1 gap-3 transition-opacity lg:grid-cols-2", refreshing && "opacity-50")}
+            >
+              {data.items.map((sermon) => (
+                <li key={sermon.id}>
+                  <SermonListItem sermon={sermon} />
+                </li>
+              ))}
+            </ul>
+            {sermons.hasNextPage && (
+              <div className="mt-6 flex justify-center">
+                <Button
+                  variant="secondary"
+                  onClick={() => void sermons.fetchNextPage()}
+                  disabled={sermons.isFetchingNextPage}
+                  aria-label={`Load more sermons (showing ${data.items.length} of ${data.total})`}
+                >
+                  {sermons.isFetchingNextPage ? "Loading…" : "Load more"}
+                </Button>
+              </div>
+            )}
+            {sermons.isFetchNextPageError && (
+              <p role="alert" className="mt-3 text-center text-sm text-muted">
+                We couldn&rsquo;t load more just now. Try again.
+              </p>
+            )}
+          </>
         )}
 
-        {data && data.items.length === 0 && (
+        {data && data.items.length === 0 && !refreshing && (
           <div className="mt-6 flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border px-6 py-14 text-center">
             <SearchX className="size-10 text-muted" strokeWidth={1.5} aria-hidden />
             <div>
@@ -127,7 +174,7 @@ export default function BrowseSermons({ title }: BrowseSermonsProps) {
       <FilterSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        filters={{ topic: filters.topic, speaker: filters.speaker, book: filters.book }}
+        filters={{ category: filters.category, speaker: filters.speaker, book: filters.book }}
         onApply={(next) => update(next)}
       />
     </Container>

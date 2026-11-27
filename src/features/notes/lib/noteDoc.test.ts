@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { docFromText, docOf, isNoteDoc } from "./noteDoc";
+import { docFromText, docOf } from "./noteDoc";
 import { editorContentFor } from "./noteEditorExtensions";
 
 describe("note docs", () => {
@@ -12,13 +12,7 @@ describe("note docs", () => {
       ],
     });
     expect(docOf(null)).toBeUndefined();
-    expect(docOf({ id: "n", sermonId: "s", atSeconds: 0, text: "Old note", createdAt: "" })?.content).toHaveLength(1);
-  });
-
-  it("checks a doc's shape", () => {
-    expect(isNoteDoc({ type: "doc", content: [] })).toBe(true);
-    expect(isNoteDoc({ type: "doc", content: "nope" })).toBe(false);
-    expect(isNoteDoc("<p>hi</p>")).toBe(false);
+    expect(docOf({ id: "n", sermonId: "s", text: "Old note", createdAt: "" })?.content).toHaveLength(1);
   });
 
   it("falls back to the plain text when the editor can't read a stored doc", () => {

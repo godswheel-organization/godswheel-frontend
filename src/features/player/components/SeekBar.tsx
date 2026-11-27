@@ -33,7 +33,7 @@ export default function SeekBar({ positionSeconds, durationSeconds }: SeekBarPro
       />
       <div className="mt-3 flex justify-between text-sm text-muted">
         <span>{formatPlaybackTime(positionSeconds)}</span>
-        <span>{remaining > 0 ? `${formatPlaybackTime(remaining)} time left` : "Finished"}</span>
+        <span>{remaining > 0 ? `${formatPlaybackTime(remaining)}` : "Finished"}</span>
       </div>
     </div>
   );

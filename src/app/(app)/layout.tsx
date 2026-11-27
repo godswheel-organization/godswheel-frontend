@@ -24,7 +24,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         account={<AccountButton />}
         sidebarExtras={
           <div className="flex flex-col gap-6">
-            {/* ExploreNav reads ?topic= to light the current topic, which Next requires to sit under Suspense. */}
+            {/* ExploreNav reads ?category= to light the current category, which Next requires to sit under Suspense. */}
             <Suspense>
               <ExploreNav />
             </Suspense>

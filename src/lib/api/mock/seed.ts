@@ -1,4 +1,3 @@
-import type { SermonNote } from "@/features/notes/types";
 import { DEMO_ACCOUNT } from "./demoAccount";
 import { hashPassword } from "./password";
 import { DEFAULT_SETTINGS, records, type StoredHistory, type StoredSaved } from "./records";
@@ -43,15 +42,5 @@ export async function seedIfEmpty(store: MockStore, now = new Date()): Promise<v
   ];
   await db.history.save(DEMO_USER_ID, history);
 
-  const notes: SermonNote[] = [
-    {
-      id: "note_demo_1",
-      sermonId: "arise-and-shine",
-      atSeconds: 6 * 60 + 20,
-      text: "I want to make more room for Scripture and prayer in my mornings.",
-      createdAt: minutesAgo(now, 2 * DAY),
-    },
-  ];
-  await db.notes.save(DEMO_USER_ID, notes);
   await db.settings.save(DEMO_USER_ID, DEFAULT_SETTINGS);
 }

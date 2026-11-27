@@ -1,7 +1,11 @@
-import { sermons } from "@/features/sermons/mocks/sermons";
 import { fail, field, ok, type MockRoute } from "../http";
+import { findSermon } from "../sermonCatalog";
 
-const titleOf = (sermonId: string) => sermons.find((sermon) => sermon.id === sermonId)?.title ?? sermonId;
+const titleOf = async (sermonId: string) => (await findSermon(sermonId))?.title ?? sermonId;
+
+// Each record with its sermon's title added under `key`.
+const withTitles = <T extends { sermonId: string }>(records: T[], key: string) =>
+  Promise.all(records.map(async (record) => ({ ...record, [key]: await titleOf(record.sermonId) })));
 
 export const accountRoutes: MockRoute[] = [
   {
@@ -34,9 +38,9 @@ export const accountRoutes: MockRoute[] = [
         exportedAt: now().toISOString(),
         profile: { firstName: user.firstName, lastName: user.lastName, email: user.email, createdAt: user.createdAt },
         settings: await db.settings.get(userId),
-        savedSermons: (await db.saved.list(userId)).map((item) => ({ ...item, title: titleOf(item.sermonId) })),
-        listeningHistory: (await db.history.list(userId)).map((item) => ({ ...item, title: titleOf(item.sermonId) })),
-        notes: (await db.notes.list(userId)).map((note) => ({ ...note, sermonTitle: titleOf(note.sermonId) })),
+        savedSermons: await withTitles(await db.saved.list(userId), "title"),
+        listeningHistory: await withTitles(await db.history.list(userId), "title"),
+        notes: await withTitles(await db.notes.list(userId), "sermonTitle"),
       });
     },
   },

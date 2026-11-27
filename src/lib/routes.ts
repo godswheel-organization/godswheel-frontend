@@ -6,7 +6,8 @@ export const ROUTES = {
   sermons: "/sermons",
   sermon: (id: string) => `/sermons/${id}`,
   reportSermon: (id: string) => `/report?sermon=${encodeURIComponent(id)}`,
-  sermonsByTopic: (topic: string) => `/sermons?topic=${encodeURIComponent(topic)}`,
+  // Browse filtered to one category (its API slug).
+  sermonsByCategory: (slug: string) => `/sermons?category=${encodeURIComponent(slug)}`,
   search: "/search",
   library: "/library",
   librarySaved: "/library/saved",

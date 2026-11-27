@@ -109,6 +109,19 @@ export const authApi = createApi({
       },
       invalidatesTags: [API_TAGS.Auth],
     }),
+
+    // Live. Revokes every session the account has (all devices, this one included). Unlike signOut it has to
+    // reach the API, or the other devices would stay signed in, so a failure is reported and nothing is cleared.
+    signOutEverywhere: builder.mutation<null, void>({
+      async queryFn(_arg, _api, _extraOptions, fetchWithBaseQuery) {
+        const result = await fetchWithBaseQuery({ url: "/auth/logout-all", method: "POST" });
+        // 401: this token was already revoked, so the account is signed out here at least.
+        if (result.error && result.error.status !== 401) return { error: result.error };
+        clearSession();
+        return { data: null };
+      },
+      invalidatesTags: [API_TAGS.Auth],
+    }),
   }),
 });
 
@@ -147,4 +160,5 @@ export const {
   useChangePasswordMutation,
   useGetSessionQuery,
   useSignOutMutation,
+  useSignOutEverywhereMutation,
 } = authApi;

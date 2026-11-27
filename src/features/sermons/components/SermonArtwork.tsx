@@ -1,16 +1,16 @@
 import { cn } from "@/lib/utils/cn";
-import { TOPICS } from "../lib/topics";
-import type { SermonTopic } from "../types";
+import { categoryStyle } from "../lib/categories";
 
 interface SermonArtworkProps {
-  topic: SermonTopic;
+  // The sermon's main category slug; unknown or missing gets the neutral fallback.
+  category?: string;
   className?: string;
   iconClassName?: string;
 }
 
-// Stand-in cover art: a topic-tinted gradient with the topic's icon, used until sermons have real images.
-export default function SermonArtwork({ topic, className, iconClassName }: SermonArtworkProps) {
-  const { icon: Icon, tint } = TOPICS[topic];
+// Stand-in cover art: a category-tinted gradient with the category's icon, used until sermons have real images.
+export default function SermonArtwork({ category, className, iconClassName }: SermonArtworkProps) {
+  const { icon: Icon, tint } = categoryStyle(category);
 
   return (
     <div

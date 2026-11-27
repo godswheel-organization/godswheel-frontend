@@ -32,6 +32,8 @@ function buildContentSecurityPolicy(nonce: string) {
     `script-src ${scriptSrc}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
+    // Sermon audio plays from wherever the API's audioUrl points (Amazon S3 today), so any https host.
+    "media-src 'self' https:",
     "font-src 'self'",
     `connect-src 'self'${API_ORIGIN ? ` ${API_ORIGIN}` : ""}`,
     "frame-ancestors 'none'",

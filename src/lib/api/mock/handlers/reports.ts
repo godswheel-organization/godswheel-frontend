@@ -1,7 +1,7 @@
 import { REPORT_DETAILS_MAX, REPORT_REASONS } from "@/features/reports/lib/reasons";
-import { sermons } from "@/features/sermons/mocks/sermons";
 import { emailSchema } from "@/lib/validation/primitives";
 import { fail, field, ok, text, type MockRoute } from "../http";
+import { findSermon } from "../sermonCatalog";
 
 // Kept so the team can see what was sent while there's no backend (IndexedDB → "reports").
 export const REPORTS_KEY = "reports";
@@ -21,7 +21,7 @@ export const reportRoutes: MockRoute[] = [
       if (reason === "other" && !details) return fail(400, "bad_request", "Details are required for Other.");
       if (details.length > REPORT_DETAILS_MAX) return fail(400, "bad_request", "Details are too long.");
       if (email && !emailSchema.safeParse(email).success) return fail(400, "bad_request", "Invalid email.");
-      if (sermonId && !sermons.some((sermon) => sermon.id === sermonId)) return fail(404, "not_found");
+      if (sermonId && !(await findSermon(sermonId))) return fail(404, "not_found");
 
       const report = {
         id: `report_${crypto.randomUUID()}`,

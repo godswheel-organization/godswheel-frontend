@@ -1,4 +1,5 @@
-import { TOPICS } from "@/features/sermons/lib/topics";
+import { primaryCategory } from "@/features/sermons/lib/categories";
+import { sermonMinutes } from "@/features/sermons/lib/formatSermon";
 import { getSermon } from "@/features/sermons/server/getSermon";
 import { OG_IMAGE_CONTENT_TYPE, OG_IMAGE_SIZE, ogImage } from "@/lib/seo/ogImage";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/seo/site";
@@ -13,9 +14,9 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   if (!sermon) return ogImage({ title: SITE_NAME, subtitle: SITE_TAGLINE });
 
   return ogImage({
-    eyebrow: `${TOPICS[sermon.topic].label} · ${sermon.scripture}`,
+    eyebrow: [primaryCategory(sermon)?.name, sermon.scripture].filter(Boolean).join(" · "),
     title: sermon.title,
     subtitle: sermon.preacher,
-    meta: `${sermon.durationMinutes} min · ${sermon.language}`,
+    meta: [sermonMinutes(sermon) && `${sermonMinutes(sermon)} min`, sermon.language].filter(Boolean).join(" · ") || undefined,
   });
 }

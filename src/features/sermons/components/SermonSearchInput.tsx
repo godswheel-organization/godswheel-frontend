@@ -22,7 +22,7 @@ export default function SermonSearchInput({
   value,
   onSearch,
   autoFocus,
-  placeholder = "Search sermons, speakers",
+  placeholder = "Search sermons",
   className,
 }: SermonSearchInputProps) {
   const [text, setText] = useState(value);
