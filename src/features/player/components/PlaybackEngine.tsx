@@ -6,8 +6,8 @@ import { useSession } from "@/features/auth/hooks/useSession";
 import { useLazyGetProgressQuery, useRecordProgressMutation } from "@/features/library/api/libraryApi";
 import { useGetSermonAudioQuery, useGetSermonQuery } from "@/features/sermons/api/sermonsApi";
 import { isApiId } from "@/features/sermons/lib/apiSermon";
-import { formatPlaybackTime } from "@/features/sermons/lib/formatSermon";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
+import { showResumeToast } from "./ResumeToast";
 import { durationKnown, durationOf, finished, pause, progressTo, seekTo, sermonDetailsLoaded, tick } from "../store/playerSlice";
 
 // How often a signed-in listener's position is saved while playing (also saved on pause, finish and switch).
@@ -92,7 +92,7 @@ export default function PlaybackEngine() {
         // Only if the listener hasn't moved on in the meantime.
         if (worthResuming && latest.current.positionSeconds < RESUME_AFTER_SECONDS) {
           dispatch(seekTo(position));
-          toast(`Picking up at ${formatPlaybackTime(position)}`, { id: "resume" });
+          showResumeToast(position);
         }
       })
       .catch(() => undefined)

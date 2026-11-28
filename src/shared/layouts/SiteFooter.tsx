@@ -15,7 +15,7 @@ export default function SiteFooter() {
       <Container className="flex flex-col gap-8 py-10 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col items-center gap-3 md:items-start">
           <Logo />
-          <p className="text-sm text-muted">Sermons by speaker, topic or scripture.</p>
+          <p className="text-sm text-muted">Sermons by speaker, title or scripture.</p>
         </div>
 
         <nav aria-label="Footer" className="flex flex-wrap justify-center gap-x-8 gap-y-3">
