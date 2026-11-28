@@ -13,7 +13,7 @@ interface FeaturedSermonsProps {
 
 export default function FeaturedSermons({ sermons }: FeaturedSermonsProps) {
   return (
-    <section id={SECTION_IDS.featured} aria-labelledby="featured-title" className="scroll-mt-24 py-14 sm:py-20">
+    <section id={SECTION_IDS.latest} aria-labelledby="featured-title" className="scroll-mt-24 py-14 sm:py-20">
       <Container>
         <SectionHeading
           id="featured-title"

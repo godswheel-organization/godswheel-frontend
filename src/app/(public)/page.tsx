@@ -48,7 +48,7 @@ const SITE_JSON_LD = [
 ];
 
 export default async function Home() {
-  // The newest sermons: the first shows in the hero's player, all four in the featured grid.
+  // The newest sermons: the first shows in the hero's player, all four in the Latest section.
   const latest = await getLatestSermons(4);
 
   return (
